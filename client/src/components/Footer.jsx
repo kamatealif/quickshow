@@ -86,16 +86,6 @@ const Footer = () => {
             </div>
 
             {/* Glassmorphic Newsletter */}
-            <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1 focus-within:border-primary/50 transition-all">
-              <input
-                type="email"
-                placeholder="Email Address"
-                className="bg-transparent border-none focus:ring-0 text-white text-sm px-4 w-full"
-              />
-              <button className="bg-primary p-2.5 rounded-lg text-white hover:bg-[#AF2529] transition-all">
-                <Send size={16} />
-              </button>
-            </div>
           </div>
         </div>
 
