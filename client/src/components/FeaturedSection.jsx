@@ -1,130 +1,93 @@
-import React from "react";
-import { ArrowRight, Star, Play } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { ArrowRight, Plus, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-
-const FEATURED_MOVIES = [
-  {
-    id: 1,
-    title: "Deadpool & Wolverine",
-    rating: "8.1",
-    year: "2024",
-    category: "Action",
-    image:
-      "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=400&h=600&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Spider-Man: No Way Home",
-    rating: "8.2",
-    year: "2021",
-    category: "Sci-Fi",
-    image:
-      "https://images.unsplash.com/photo-1635805737707-575885ab0820?q=80&w=400&h=600&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Thor: Love and Thunder",
-    rating: "6.2",
-    year: "2022",
-    category: "Adventure",
-    image:
-      "https://images.unsplash.com/photo-1534809027769-b00d750a6bac?q=80&w=400&h=600&fit=crop",
-  },
-  {
-    id: 4,
-    title: "The Avengers",
-    rating: "8.4",
-    year: "2012",
-    category: "Action",
-    image:
-      "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=400&h=600&fit=crop",
-  },
-  {
-    id: 5,
-    title: "Black Widow",
-    rating: "6.7",
-    year: "2021",
-    category: "Action",
-    image:
-      "https://images.unsplash.com/photo-1636467222374-f37672bd22c6?q=80&w=400&h=600&fit=crop",
-  },
-];
+import { motion, AnimatePresence } from "motion/react";
+import { dummyShowsData } from "../assets/assets";
+import MovieCard from "./MovieCard";
 
 function FeaturedSection() {
   const navigate = useNavigate();
+  const sectionRef = useRef(null);
+
+  // Set initial visible count to 8 (2 rows of 4)
+  const [visibleCount, setVisibleCount] = useState(8);
+
+  const toggleMovies = () => {
+    if (visibleCount < dummyShowsData.length) {
+      // Increase by 8 to add two more full rows
+      setVisibleCount((prev) => Math.min(prev + 8, dummyShowsData.length));
+    } else {
+      // Reset to initial 8 and scroll smoothly back to the top of the section
+      setVisibleCount(8);
+      sectionRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
-    <section className="px-6 md:px-16 lg:px-36 py-12 bg-black">
+    <section ref={sectionRef} className="px-6 md:px-16 lg:px-36 py-20 bg-black">
       {/* 1. Header Section */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
-          <p className="text-primary font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs">
+          <p className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] md:text-xs mb-2">
             Marvel Universe
           </p>
-          <h2 className="text-2xl md:text-4xl font-bold text-white uppercase tracking-tighter">
+          <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter">
             Now Showing
           </h2>
         </div>
 
         <button
           onClick={() => navigate("/movies")}
-          className="group flex items-center gap-2 text-xs md:text-sm text-gray-400 hover:text-white transition-all cursor-pointer"
+          className="group flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-all cursor-pointer border-b border-transparent hover:border-primary pb-1 w-fit"
         >
-          View All
+          Explore All Movies
           <ArrowRight className="group-hover:translate-x-1 transition-transform w-4 h-4" />
         </button>
       </div>
 
-      {/* 2. Movie Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8">
-        {FEATURED_MOVIES.map((movie) => {
-          return (
+      {/* 2. Optimized Grid: Fixed to 4 Columns on Desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-14">
+        <AnimatePresence mode="popLayout">
+          {dummyShowsData.slice(0, visibleCount).map((show, index) => (
             <motion.div
-              key={movie.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="group cursor-pointer"
+              key={show._id || index}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.4, delay: (index % 8) * 0.05 }}
             >
-              {/* Poster Card */}
-              <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-neutral-900 border border-white/5 shadow-2xl">
-                <img
-                  src={movie.image}
-                  alt={movie.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100"
-                />
-
-                {/* Play Overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="p-3 bg-primary rounded-full shadow-xl">
-                    <Play className="w-5 h-5 fill-white text-white translate-x-0.5" />
-                  </div>
-                </div>
-
-                {/* Rating Tag */}
-                <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-black/60 backdrop-blur-md rounded border border-white/10">
-                  <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                  <span className="text-[10px] font-bold text-white">
-                    {movie.rating}
-                  </span>
-                </div>
-              </div>
-
-              {/* Movie Details Below Card */}
-              <div className="mt-3">
-                <h3 className="text-white font-medium text-xs md:text-sm truncate group-hover:text-primary transition-colors">
-                  {movie.title}
-                </h3>
-                <div className="flex justify-between text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-semibold">
-                  <span>{movie.category}</span>
-                  <span>{movie.year}</span>
-                </div>
-              </div>
+              <MovieCard movie={show} />
             </motion.div>
-          );
-        })}
+          ))}
+        </AnimatePresence>
       </div>
+
+      {/* 3. Logic-Driven Toggle Button */}
+      {dummyShowsData.length > 8 && (
+        <div className="mt-20 flex justify-center">
+          <button
+            onClick={toggleMovies}
+            className={`flex items-center gap-3 px-12 py-5 rounded-full font-bold transition-all hover:scale-105 active:scale-95 group border-2 ${
+              visibleCount < dummyShowsData.length
+                ? "bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                : "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 shadow-[0_0_20px_rgba(230,36,41,0.2)]"
+            }`}
+          >
+            {visibleCount < dummyShowsData.length ? (
+              <>
+                <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                SHOW MORE
+              </>
+            ) : (
+              <>
+                <ChevronUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+                SHOW LESS
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

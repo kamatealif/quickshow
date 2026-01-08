@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { MenuIcon, SearchIcon, TicketPlus, XIcon, Heart } from "lucide-react";
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,11 +14,14 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Change background on scroll
+  // Handle body scroll lock when menu is open
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+    document.body.style.overflow = isOpen ? "hidden" : "unset";
+  }, [isOpen]);
+
+  // Handle background change on scroll
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -32,14 +35,13 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 px-6 md:px-16 lg:px-36 py-4 ${
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 px-6 md:px-16 lg:px-36 py-4 ${
         isScrolled
-          ? "bg-black/90 backdrop-blur-md py-3 border-b border-white/10"
+          ? "bg-black/80 backdrop-blur-lg border-b border-white/10 py-3"
           : "bg-transparent"
       }`}
     >
-      <div className="flex items-center justify-between max-w-[1440px] mx-auto">
-        {/* Logo */}
+      <div className="flex items-center justify-between max-w-360 mx-auto">
         <Link to="/" onClick={() => window.scrollTo(0, 0)} className="z-50">
           <img
             src={assets.logo}
@@ -48,7 +50,7 @@ const Navbar = () => {
           />
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 bg-white/5 border border-white/10 px-8 py-2.5 rounded-full backdrop-blur-sm">
           {navLinks.map((link) => (
             <Link
@@ -65,10 +67,9 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Right Side Actions */}
+        {/* Actions */}
         <div className="flex items-center gap-5">
           <SearchIcon className="hidden md:block w-5 h-5 text-gray-300 cursor-pointer hover:text-white transition-colors" />
-
           <Link to="/favorite" className="relative group">
             <Heart
               className={`w-5 h-5 transition-colors ${
@@ -81,26 +82,23 @@ const Navbar = () => {
 
           {!user ? (
             <button
-              className="px-6 py-2 bg-primary hover:bg-[#AF2529] text-white text-sm transition-all rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95"
               onClick={openSignIn}
+              className="px-6 py-2 bg-primary hover:bg-[#AF2529] text-white text-sm transition-all rounded-full font-bold shadow-lg shadow-primary/20"
             >
               Login
             </button>
           ) : (
-            <div className="flex items-center gap-4">
-              <UserButton afterSignOutUrl="/">
-                <UserButton.MenuItems>
-                  <UserButton.Action
-                    label="My Bookings"
-                    labelIcon={<TicketPlus width={15} />}
-                    onClick={() => navigate("/my-bookings")}
-                  />
-                </UserButton.MenuItems>
-              </UserButton>
-            </div>
+            <UserButton afterSignOutUrl="/">
+              <UserButton.MenuItems>
+                <UserButton.Action
+                  label="My Bookings"
+                  labelIcon={<TicketPlus width={15} />}
+                  onClick={() => navigate("/my-bookings")}
+                />
+              </UserButton.MenuItems>
+            </UserButton>
           )}
 
-          {/* Mobile Menu Toggle */}
           <button
             className="md:hidden z-50 text-white"
             onClick={() => setIsOpen(!isOpen)}
@@ -122,7 +120,7 @@ const Navbar = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 md:hidden z-40"
+            className="fixed inset-0 bg-black/60 backdrop-blur-xl flex flex-col items-center justify-center gap-8 md:hidden z-40"
           >
             {navLinks.map((link) => (
               <Link
@@ -134,13 +132,6 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <Link
-              to="/favorite"
-              onClick={() => setIsOpen(false)}
-              className="text-2xl font-bold text-white hover:text-primary transition-colors"
-            >
-              Favorites
-            </Link>
           </motion.div>
         )}
       </AnimatePresence>
