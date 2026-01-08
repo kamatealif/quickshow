@@ -1,102 +1,150 @@
-import React from "react";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
-import { MenuIcon, SearchIcon, TicketPlus, XIcon } from "lucide-react";
-("../assets/assets");
-
+import { MenuIcon, SearchIcon, TicketPlus, XIcon, Heart } from "lucide-react";
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
+import { motion, AnimatePresence } from "framer-motion";
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const { user } = useUser();
-
   const { openSignIn } = useClerk();
-
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Change background on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "Movies", path: "/movies" },
+    { name: "Theaters", path: "/theaters" },
+    { name: "Releases", path: "/releases" },
+  ];
 
   return (
-    <div className="fixed top-0 left-0 z-50 w-full flex items-center justify-between md:px-16 lg:px-36 py-5">
-      <Link to="/" className="max-md:flex-1">
-        <img src={assets.logo} alt="Logo" />
-      </Link>
-      <div
-        className={`max-md:absolute max-md:top-0 max-md:left-0 max-md:font-medium max-md:text-lg z-50 flex flex-col md:flex-row items-center max-md:justify-center gap-8 md:px-8 py-3 max-md:h-screen md:rounded-full backdrop-blur bg-black/70 md:bg-white/10 md:border border-gray-300/20 overflow-hidden transition-[width] duration-300 ${
-          isOpen ? "max-md:w-full" : "max-md:w-0 max-md:overflow-hidden"
-        }`}
-      >
-        <XIcon
-          className="md:hidden absolute top-6 right-6 w-6 h-6 cursor-pointer"
-          onClick={() => setIsOpen(!isOpen)}
-        />
-        <Link
-          onClick={() => {
-            scrollTo(0, 0), setIsOpen(false);
-          }}
-          to="/"
-        >
-          Home
+    <nav
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 px-6 md:px-16 lg:px-36 py-4 ${
+        isScrolled
+          ? "bg-black/90 backdrop-blur-md py-3 border-b border-white/10"
+          : "bg-transparent"
+      }`}
+    >
+      <div className="flex items-center justify-between max-w-[1440px] mx-auto">
+        {/* Logo */}
+        <Link to="/" onClick={() => window.scrollTo(0, 0)} className="z-50">
+          <img
+            src={assets.logo}
+            alt="Logo"
+            className="h-8 md:h-10 object-contain"
+          />
         </Link>
-        <Link
-          onClick={() => {
-            scrollTo(0, 0), setIsOpen(false);
-          }}
-          to="/movies"
-        >
-          Movies
-        </Link>
-        <Link
-          onClick={() => {
-            scrollTo(0, 0), setIsOpen(false);
-          }}
-          to="/"
-        >
-          Theaters
-        </Link>
-        <Link
-          onClick={() => {
-            scrollTo(0, 0), setIsOpen(false);
-          }}
-          to="/"
-        >
-          Releases
-        </Link>
-        <Link
-          onClick={() => {
-            scrollTo(0, 0), setIsOpen(false);
-          }}
-          to="/favorite"
-        >
-          Favorites
-        </Link>
-      </div>
-      <div className="flex items-center gap-8">
-        <SearchIcon className="max-md:hidden w-6 h-6 cursor-pointer" />
 
-        {!user ? (
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-8 bg-white/5 border border-white/10 px-8 py-2.5 rounded-full backdrop-blur-sm">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location.pathname === link.path
+                  ? "text-primary"
+                  : "text-gray-300"
+              }`}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+
+        {/* Right Side Actions */}
+        <div className="flex items-center gap-5">
+          <SearchIcon className="hidden md:block w-5 h-5 text-gray-300 cursor-pointer hover:text-white transition-colors" />
+
+          <Link to="/favorite" className="relative group">
+            <Heart
+              className={`w-5 h-5 transition-colors ${
+                location.pathname === "/favorite"
+                  ? "fill-primary text-primary"
+                  : "text-gray-300 group-hover:text-white"
+              }`}
+            />
+          </Link>
+
+          {!user ? (
+            <button
+              className="px-6 py-2 bg-primary hover:bg-[#AF2529] text-white text-sm transition-all rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95"
+              onClick={openSignIn}
+            >
+              Login
+            </button>
+          ) : (
+            <div className="flex items-center gap-4">
+              <UserButton afterSignOutUrl="/">
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    label="My Bookings"
+                    labelIcon={<TicketPlus width={15} />}
+                    onClick={() => navigate("/my-bookings")}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
+            </div>
+          )}
+
+          {/* Mobile Menu Toggle */}
           <button
-            className="px-4 py-1 sm:px-7 sm:py-2 bg-primary hover:bg-primary-dull transition rounded-full font-medium cursor-pointer"
-            onClick={openSignIn}
+            className="md:hidden z-50 text-white"
+            onClick={() => setIsOpen(!isOpen)}
           >
-            Login
+            {isOpen ? (
+              <XIcon className="w-7 h-7" />
+            ) : (
+              <MenuIcon className="w-7 h-7" />
+            )}
           </button>
-        ) : (
-          <UserButton>
-            <UserButton.MenuItems>
-              <UserButton.Action
-                label="My Bookings"
-                labelIcon={<TicketPlus width={15} />}
-                onClick={() => navigate("my-bookings")}
-              />
-            </UserButton.MenuItems>
-          </UserButton>
-        )}
+        </div>
       </div>
-      <MenuIcon
-        className="max-md:ml-4 md:hidden w-8 h-8 cursor-pointer"
-        onClick={() => setIsOpen(!isOpen)}
-      />
-    </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-8 md:hidden z-40"
+          >
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                onClick={() => setIsOpen(false)}
+                className="text-2xl font-bold text-white hover:text-primary transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
+            <Link
+              to="/favorite"
+              onClick={() => setIsOpen(false)}
+              className="text-2xl font-bold text-white hover:text-primary transition-colors"
+            >
+              Favorites
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
   );
 };
 
