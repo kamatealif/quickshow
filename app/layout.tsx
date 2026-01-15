@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/homepage/theme-provider";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/homepage/Navbar";
 
 const notoSans = Noto_Sans({ variable: "--font-sans" });
 

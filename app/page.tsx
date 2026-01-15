@@ -1,22 +1,35 @@
-import HomeHero from "@/components/home-hero";
-import FeaturedMovies from "@/components/featured-movies";
-import BrowseByGenre from "@/components/browse-by-genre";
-import TrustSection from "@/components/trust-section";
-import Footer from "@/components/footer";
 import { Suspense } from "react";
-import HeroSkeleton from "@/components/hero-skeleton";
-import FeaturedMoviesSkeleton from "@/components/featured-movies-skeletorn";
+
+import HomeHero from "@/components/homepage/home-hero";
+import HeroSkeleton from "@/components/homepage/hero-skeleton";
+
+import FeaturedMovies from "@/components/homepage/featured-movies";
+// import FeaturedMoviesSkeleton from "@/components/featured-movies-skeleton";
+import UpcomingMovies from "@/components/homepage/upcoming-movies";
+import UpcomingMoviesSkeleton from "@/components/homepage/upcoming-movies-skeleton";
+
+import TrustSection from "@/components/homepage/trust-section";
+import Footer from "@/components/homepage/footer";
 
 export default function HomePage() {
   return (
     <>
+      {/* Hero */}
       <Suspense fallback={<HeroSkeleton />}>
         <HomeHero />
       </Suspense>
-      <Suspense fallback={<FeaturedMoviesSkeleton />}>
-        <FeaturedMovies />
+
+      {/* Now Showing */}
+      {/* <Suspense fallback={<FeaturedMoviesSkeleton />}> */}
+      <FeaturedMovies />
+      {/* </Suspense> */}
+
+      {/* Upcoming Movies */}
+      <Suspense fallback={<UpcomingMoviesSkeleton />}>
+        <UpcomingMovies />
       </Suspense>
-      <BrowseByGenre />
+
+      {/* Trust + Footer */}
       <TrustSection />
       <Footer />
     </>

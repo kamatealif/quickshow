@@ -1,4 +1,4 @@
-import MovieCard from "@/components/movie-card";
+import MovieCard from "@/components/movies/movie-card";
 import { fetchFromTMDB } from "@/lib/tmdb";
 
 type TMDBMovie = {

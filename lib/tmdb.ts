@@ -1,17 +1,25 @@
-const TMDB_BASE_URL = "https://api.themoviedb.org/3"
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 export async function fetchFromTMDB(endpoint: string) {
-  const res = await fetch(
-    `${TMDB_BASE_URL}${endpoint}?api_key=${process.env.TMDB_API_KEY}`,
-    {
-      // Cache for performance (Next.js feature)
-      next: { revalidate: 60 * 60 }, // 1 hour
-    }
-  )
+  // Ensure endpoint starts correctly
+  const normalizedEndpoint = endpoint.startsWith("/")
+    ? endpoint
+    : `/${endpoint}`;
+
+  // Ensure correct query separator
+  const url =
+    `${TMDB_BASE_URL}${normalizedEndpoint}` +
+    (normalizedEndpoint.includes("?") ? "&" : "?") +
+    `api_key=${process.env.TMDB_API_KEY}`;
+
+  const res = await fetch(url, {
+    next: { revalidate: 60 * 60 }, // 1 hour cache
+  });
 
   if (!res.ok) {
-    throw new Error("Failed to fetch TMDB data")
+    console.error("TMDB FETCH FAILED:", url, res.status);
+    throw new Error("Failed to fetch TMDB data");
   }
 
-  return res.json()
+  return res.json();
 }
