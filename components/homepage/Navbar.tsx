@@ -1,43 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Film, Menu, User, LogOut } from "lucide-react";
+import { Menu, X, Clapperboard, ChevronRight, Settings } from "lucide-react";
+import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 
 import { Button } from "@/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-} from "@/components/ui/navigation-menu";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
   SheetTitle,
+  SheetClose,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-import { UserButton, useUser } from "@clerk/nextjs";
-
-/* ---------------------------------------
-   NAVBAR
----------------------------------------- */
 export default function Navbar() {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
+  const { openUserProfile } = useClerk(); // Built-in Clerk helper
   const pathname = usePathname();
-  const router = useRouter();
-
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -45,187 +28,171 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleNav = (href: string) => {
-    setMobileOpen(false);
-    router.push(href);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   return (
     <nav
-      className={`fixed top-0 left-0 z-50 w-full transition-all duration-500
-        ${
-          scrolled
-            ? "bg-black/60 backdrop-blur-xl border-b border-white/5 py-3"
-            : "bg-transparent py-6"
-        }`}
+      className={`fixed top-0 left-0 z-[100] w-full transition-all duration-500 ${
+        scrolled
+          ? "py-3 bg-black/80 backdrop-blur-2xl border-b border-white/5"
+          : "py-6 bg-transparent"
+      }`}
     >
       <div className="mx-auto max-w-7xl px-6 md:px-12 flex items-center justify-between">
-        {/* LOGO */}
-        <Link
-          href="/"
-          onClick={() => window.scrollTo({ top: 0 })}
-          className="group flex items-center gap-2 font-bold text-lg text-white
-            transition-all duration-300 hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.35)]"
-        >
-          <Film className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
-          QuickShow
+        {/* 1. BRAND LOGO */}
+        <Link href="/" className="group flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)] transition-transform group-hover:scale-110">
+            <Clapperboard className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-xl font-black tracking-tighter text-white uppercase italic">
+            Quick<span className="text-primary">Show</span>
+          </span>
         </Link>
 
-        {/* DESKTOP NAV */}
-        <NavigationMenu className="hidden md:flex items-center gap-2 bg-white/5 border border-white/10 p-1 rounded-full backdrop-blur-md">
-          <NavigationMenuList className="flex gap-1">
-            {NAV_LINKS.map((link) => {
-              const active = pathname === link.href;
-              return (
-                <NavigationMenuItem key={link.href}>
-                  <Link
-                    href={link.href}
-                    className={`relative px-5 py-2 text-sm font-medium rounded-full transition-all duration-300
-                      ${
-                        active
-                          ? "bg-primary text-white shadow-md shadow-primary/20"
-                          : "text-gray-400 hover:text-white hover:bg-white/5"
-                      }`}
-                  >
-                    {link.label}
-                    {active && (
-                      <span className="absolute left-1/2 -bottom-1 h-[2px] w-6 -translate-x-1/2 rounded-full bg-primary animate-pulse" />
-                    )}
-                  </Link>
-                </NavigationMenuItem>
-              );
-            })}
-          </NavigationMenuList>
-        </NavigationMenu>
-
-        {/* DESKTOP AUTH */}
-        <div className="hidden md:flex items-center gap-3">
-          {isSignedIn ? (
-            <UserMenu />
-          ) : (
-            <Link
-              href="/sign-up"
-              className="px-6 py-2 rounded-full text-sm font-semibold
-                bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-            >
-              Login
-            </Link>
-          )}
+        {/* 2. DESKTOP NAVIGATION */}
+        <div className="hidden md:flex items-center bg-white/[0.03] border border-white/10 px-1.5 py-1.5 rounded-2xl backdrop-blur-md">
+          {NAV_LINKS.map((link) => {
+            const active = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-6 py-2 text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300 rounded-xl ${
+                  active
+                    ? "bg-primary text-white"
+                    : "text-zinc-500 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
-        {/* MOBILE MENU */}
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden rounded-full text-white hover:bg-white/10"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-
-          <SheetContent
-            side="right"
-            className="flex flex-col bg-[#111] border-l border-white/10 backdrop-blur-xl"
-          >
-            <VisuallyHidden>
-              <SheetTitle>Mobile navigation</SheetTitle>
-            </VisuallyHidden>
-
-            {/* NAV LINKS */}
-            <div className="mt-14 flex flex-col gap-2">
-              {NAV_LINKS.map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => handleNav(link.href)}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-lg font-semibold transition
-                    ${
-                      pathname === link.href
-                        ? "bg-primary/15 text-primary"
-                        : "text-gray-400 hover:bg-white/5 hover:text-white"
-                    }`}
-                >
-                  {link.label}
-                </button>
-              ))}
-            </div>
-
-            {/* ACCOUNT */}
-            {isSignedIn && user ? (
-              <MobileUserMenu user={user} />
+        {/* 3. MOBILE TRIGGER & AUTH */}
+        <div className="flex items-center gap-3">
+          <div className="hidden md:block">
+            {isSignedIn ? (
+              <UserButton afterSignOutUrl="/" />
             ) : (
-              <div className="mt-auto pt-6 border-t border-white/10">
-                <Link
-                  href="/sign-up"
-                  onClick={() => setMobileOpen(false)}
-                  className="block w-full text-center px-6 py-3 rounded-full
-                    bg-primary shadow-lg shadow-primary/20 text-white"
-                >
+              <Link href="/sign-up">
+                <Button className="rounded-xl bg-white text-black hover:bg-zinc-200 font-bold px-6 h-10 text-xs uppercase tracking-widest">
                   Login
-                </Link>
-              </div>
+                </Button>
+              </Link>
             )}
-          </SheetContent>
-        </Sheet>
+          </div>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden h-11 w-11 rounded-xl bg-white/5 border border-white/10 text-white"
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+
+            {/* FIXED: High Z-index and solid background to prevent overlap */}
+            <SheetContent
+              side="right"
+              className="z-[110] w-full sm:max-w-md bg-[#080808] border-l border-white/5 p-0 flex flex-col focus:ring-0 outline-none"
+            >
+              <VisuallyHidden>
+                <SheetTitle>Navigation Menu</SheetTitle>
+              </VisuallyHidden>
+
+              {/* Header with CUSTOM Close Button ONLY */}
+              <div className="flex items-center justify-between p-8">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                    <Clapperboard className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-black text-white uppercase italic tracking-tighter text-lg">
+                    QuickShow
+                  </span>
+                </div>
+
+                {/* Our only close button */}
+                {/* <SheetClose className="h-12 w-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white transition-all hover:bg-primary group focus:outline-none">
+                  <X className="h-6 w-6 transition-transform group-hover:rotate-90" />
+                </SheetClose> */}
+              </div>
+
+              {/* Navigation Links */}
+              <div className="flex flex-col gap-2 px-8 mt-4 overflow-y-auto">
+                {NAV_LINKS.map((link) => (
+                  <SheetClose asChild key={link.href}>
+                    <Link
+                      href={link.href}
+                      className={`group flex items-center justify-between py-6 border-b border-white/5 text-3xl font-black uppercase tracking-tighter transition-all ${
+                        pathname === link.href
+                          ? "text-primary"
+                          : "text-zinc-800 hover:text-white"
+                      }`}
+                    >
+                      {link.label}
+                      <ChevronRight
+                        className={`h-6 w-6 transition-transform ${
+                          pathname === link.href
+                            ? "text-primary opacity-100"
+                            : "opacity-0 group-hover:opacity-100 group-hover:translate-x-2"
+                        }`}
+                      />
+                    </Link>
+                  </SheetClose>
+                ))}
+              </div>
+
+              {/* FOOTER: Integrated Profile Button */}
+              <div className="mt-auto p-8 bg-gradient-to-t from-black to-transparent">
+                {isSignedIn ? (
+                  <div
+                    onClick={() => openUserProfile()} // Opens built-in Clerk dialog
+                    className="group flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 transition-all hover:bg-white/10 hover:border-primary/50 cursor-pointer shadow-2xl"
+                  >
+                    <div className="flex items-center gap-4">
+                      <UserButton
+                        appearance={{
+                          elements: {
+                            userButtonTrigger: "pointer-events-none",
+                          },
+                        }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-white uppercase tracking-tight group-hover:text-primary transition-colors">
+                          {user?.firstName || "My Profile"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest flex items-center gap-1">
+                          Manage Account <Settings className="h-2.5 w-2.5" />
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-zinc-700 group-hover:text-primary transition-transform group-hover:translate-x-1" />
+                  </div>
+                ) : (
+                  <SheetClose asChild>
+                    <Link href="/sign-up">
+                      <Button className="w-full h-16 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-sm shadow-2xl shadow-primary/20">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </SheetClose>
+                )}
+                <p className="mt-8 text-[9px] text-zinc-700 font-black uppercase tracking-[0.4em] text-center">
+                  Premium Cinema Experience
+                </p>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </nav>
   );
 }
 
-/* ---------------------------------------
-   NAV LINKS
----------------------------------------- */
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Movies", href: "/movies" },
   { label: "Theaters", href: "/theaters" },
   { label: "Bookings", href: "/bookings" },
 ];
-
-/* ---------------------------------------
-   USER MENUS
----------------------------------------- */
-function UserMenu() {
-  return (
-    <UserButton
-      appearance={{
-        elements: {
-          userButtonAvatarBox: "h-8 w-8",
-          userButtonAvatarImage: "h-8 w-8",
-          userButtonAvatarFallback: "h-8 w-8",
-        },
-      }}
-    />
-  );
-}
-
-function MobileUserMenu({ user }: { user: any }) {
-  const displayName =
-    user.firstName ||
-    user.username ||
-    user.emailAddresses?.[0]?.emailAddress ||
-    "User";
-
-  return (
-    <div className="mt-auto pt-6 border-t border-white/10 flex flex-col gap-4">
-      <div className="flex items-center gap-3 text-white">
-        <Avatar className="h-9 w-9">
-          <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <span className="font-medium">{displayName}</span>
-      </div>
-
-      <Button variant="outline" className="justify-start">
-        <User className="mr-2 h-4 w-4" />
-        Profile
-      </Button>
-
-      <Button variant="destructive" className="justify-start">
-        <LogOut className="mr-2 h-4 w-4" />
-        Logout
-      </Button>
-    </div>
-  );
-}

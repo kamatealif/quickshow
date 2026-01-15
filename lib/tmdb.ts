@@ -1,5 +1,19 @@
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+async function fetchWithTimeout(url: string, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+    });
+    return res;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function fetchFromTMDB(endpoint: string) {
   const normalizedEndpoint = endpoint.startsWith("/")
     ? endpoint
@@ -10,30 +24,31 @@ export async function fetchFromTMDB(endpoint: string) {
     (normalizedEndpoint.includes("?") ? "&" : "?") +
     `api_key=${process.env.TMDB_API_KEY}`;
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8_000); // 8s timeout
+  // 🔁 Retry once on network failure
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetchWithTimeout(url, 8000);
 
-    const res = await fetch(url, {
-      signal: controller.signal,
-      next: { revalidate: 60 * 60 },
-    });
+      if (res.status === 429) {
+        console.warn("TMDB rate limit hit");
+        return null;
+      }
 
-    clearTimeout(timeout);
+      if (!res.ok) {
+        console.warn("TMDB HTTP error:", res.status);
+        return null;
+      }
 
-    if (!res.ok) {
-      console.error("TMDB responded with error:", res.status, url);
-      return { results: [] };
+      return await res.json();
+    } catch {
+      if (attempt === 2) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("TMDB request failed after retry:", url);
+        }
+        return null;
+      }
     }
-
-    return await res.json();
-  } catch (error: any) {
-    console.error("TMDB fetch failed:", {
-      url,
-      message: error?.message,
-    });
-
-    // ✅ NEVER crash the app
-    return { results: [] };
   }
+
+  return null;
 }

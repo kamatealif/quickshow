@@ -12,35 +12,39 @@ type TMDBMovie = {
 
 export default async function FeaturedMovies() {
   const data = await fetchFromTMDB("/movie/now_playing");
-  const movies: TMDBMovie[] = data.results.slice(0, 8);
+
+  // ✅ SAFETY: handle null + invalid shape
+  const movies: TMDBMovie[] = Array.isArray(data?.results)
+    ? data.results.slice(0, 8)
+    : [];
+
+  if (movies.length === 0) {
+    return (
+      <section className="relative py-16 bg-black">
+        <div className="mx-auto max-w-7xl px-6 lg:px-12">
+          <p className="text-zinc-500">
+            Unable to load featured movies right now.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative py-16 bg-black">
-      <div className="mx-auto max-w-7xl px-6 md:px-12">
-        {/* Header */}
+      <div className="mx-auto max-w-7xl px-6 lg:px-12">
         <div className="mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-white">
             Now Showing
           </h2>
           <p className="mt-2 text-sm text-gray-400">
-            Book tickets for movies currently playing in theaters
+            Movies currently playing in theaters
           </p>
         </div>
 
-        {/* Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
           {movies.map((movie) => (
-            <MovieCard
-              key={movie.id}
-              movie={{
-                id: movie.id,
-                title: movie.title,
-                poster_path: movie.poster_path,
-                overview: movie.overview,
-                vote_average: movie.vote_average,
-                release_date: movie.release_date,
-              }}
-            />
+            <MovieCard key={movie.id} movie={movie} />
           ))}
         </div>
       </div>

@@ -2,56 +2,89 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Ticket, ChevronRight } from "lucide-react";
+import { Star, Info, Ticket, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function MovieCard({ movie }: any) {
+interface MovieCardProps {
+  movie: {
+    id: number;
+    title: string;
+    poster_path: string;
+    vote_average: number;
+    release_date: string;
+    overview: string;
+  };
+}
+
+export default function MovieCard({ movie }: MovieCardProps) {
   const releaseYear = movie.release_date
     ? new Date(movie.release_date).getFullYear()
     : "N/A";
 
+  const detailsPath = `/movies/${movie.id}`;
+
   return (
-    <div className="group relative flex flex-col rounded-[2.5rem] bg-zinc-900/20 transition-all duration-500 hover:-translate-y-2">
-      {/* Poster */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[2.5rem] border border-white/5 shadow-2xl">
+    <div className="group relative flex flex-col h-full bg-zinc-900 border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10">
+      {/* 1. Proper Poster Image */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden">
         <Image
           src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
           alt={movie.title}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 50vw, 25vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
 
-        {/* Rating */}
-        <div className="absolute top-5 left-5 flex items-center gap-1.5 rounded-2xl bg-black/50 backdrop-blur-xl px-3 py-1.5 text-[11px] font-black text-yellow-400 border border-white/10">
+        {/* Subtle Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60" />
+
+        {/* Floating Rating */}
+        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-lg bg-black/70 backdrop-blur-md px-2 py-1 text-xs font-bold text-yellow-400 border border-white/5">
           <Star className="h-3.5 w-3.5 fill-yellow-400" />
           {movie.vote_average.toFixed(1)}
         </div>
       </div>
 
-      {/* Text Info */}
-      <div className="flex flex-col flex-grow p-6">
-        <h3 className="text-xl font-extrabold tracking-tight text-white leading-tight mb-2 group-hover:text-primary transition-colors">
+      {/* 2. Content Area */}
+      <div className="flex flex-col flex-grow p-4">
+        {/* Full Title - No cutting off */}
+        <h3 className="text-lg font-bold text-white leading-snug mb-2 group-hover:text-primary transition-colors">
           {movie.title}
         </h3>
 
-        <div className="flex items-center gap-2 mb-6 text-[11px] font-bold text-zinc-500 uppercase tracking-[0.1em]">
-          <span>{releaseYear}</span>
+        {/* Metadata */}
+        <div className="flex items-center gap-2 mb-4 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+          <Calendar className="h-3.5 w-3.5" />
+          {releaseYear}
           <span className="h-1 w-1 rounded-full bg-zinc-700" />
-          <span className="text-primary/80">Premium</span>
+          <span>Movie</span>
         </div>
 
-        <Link href={`/movies/${movie.id}`} className="mt-auto">
-          <Button className="w-full h-12 rounded-2xl bg-white text-black hover:bg-zinc-200 font-black text-xs uppercase tracking-widest group/btn">
-            Book Now
-            <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
-          </Button>
-        </Link>
-      </div>
+        {/* Short Overview */}
+        <p className="text-xs leading-relaxed text-zinc-400 line-clamp-2 mb-6">
+          {movie.overview || "No description available."}
+        </p>
 
-      {/* Background Hover Glow */}
-      <div className="absolute -inset-2 bg-primary/5 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
+        {/* 3. Action Buttons */}
+        <div className="mt-auto flex flex-col gap-2">
+          {/* Primary Action: Details */}
+          <Link href={detailsPath} className="w-full">
+            <Button className="w-full h-10 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-widest gap-2">
+              <Info className="h-4 w-4" />
+              View Details
+            </Button>
+          </Link>
+
+          {/* Secondary Action: Booking */}
+          <Button
+            variant="outline"
+            className="w-full h-10 rounded-lg border-white/10 bg-transparent hover:bg-white/5 text-zinc-300 hover:text-white font-bold text-xs uppercase tracking-widest gap-2"
+          >
+            <Ticket className="h-4 w-4" />
+            Book Now
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
