@@ -5,14 +5,15 @@ type TMDBMovie = {
   id: number;
   title: string;
   poster_path: string;
+  overview: string;
   vote_average: number;
-  genre_ids: number[];
+  release_date: string;
 };
 
 export default async function FeaturedMovies() {
   const data = await fetchFromTMDB("/movie/now_playing");
-
   const movies: TMDBMovie[] = data.results.slice(0, 8);
+
   return (
     <section className="relative py-16 bg-black">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
@@ -34,10 +35,10 @@ export default async function FeaturedMovies() {
               movie={{
                 id: movie.id,
                 title: movie.title,
-                poster_path: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
-                vote_average: movie.vote_average,
-                genres: [], // map later via genre_ids
+                poster_path: movie.poster_path,
                 overview: movie.overview,
+                vote_average: movie.vote_average,
+                release_date: movie.release_date,
               }}
             />
           ))}

@@ -10,35 +10,34 @@ type MovieCardProps = {
     id: number;
     title: string;
     poster_path: string;
-    vote_average: number;
-    genres: { id: number; name: string }[];
     overview: string;
+    vote_average: number;
+    release_date: string;
   };
 };
 
-function truncate(text: string, max = 120) {
-  if (!text) return "";
+function truncate(text: string, max = 140) {
+  if (!text) return "No description available.";
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
 export default function MovieCard({ movie }: MovieCardProps) {
   return (
     <div
-      className="group relative overflow-hidden rounded-xl
+      className="overflow-hidden rounded-xl
       bg-black/40 border border-white/10
-      hover:border-white/20 transition-all"
+      hover:border-white/20 transition-all flex flex-col"
     >
       {/* Poster */}
-      <div className="relative aspect-[2/3] overflow-hidden">
+      <div className="relative aspect-[2/3]">
         <Image
-          src={movie.poster_path}
+          src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
           alt={movie.title}
           fill
-          className="object-cover transition-transform duration-500
-            group-hover:scale-105"
+          className="object-cover"
         />
 
-        {/* Rating */}
+        {/* Rating badge */}
         <div
           className="absolute top-3 left-3 flex items-center gap-1
           rounded-full bg-black/70 px-2 py-1 text-xs text-yellow-400"
@@ -46,38 +45,27 @@ export default function MovieCard({ movie }: MovieCardProps) {
           <Star className="h-3 w-3 fill-yellow-400" />
           {movie.vote_average.toFixed(1)}
         </div>
-
-        {/* Hover Overview (desktop only) */}
-        <div
-          className="pointer-events-none absolute inset-0
-          bg-gradient-to-t from-black/90 via-black/60 to-transparent
-          opacity-0 group-hover:opacity-100 transition-opacity
-          hidden md:flex items-end p-4"
-        >
-          <p className="text-xs text-gray-200 leading-snug">
-            {truncate(movie.overview)}
-          </p>
-        </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
-        <h3 className="line-clamp-1 text-sm font-semibold text-white">
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        {/* Title */}
+        <h3 className="text-sm font-semibold text-white line-clamp-2">
           {movie.title}
         </h3>
 
-        {/* Genres */}
-        <p className="text-xs text-gray-400 line-clamp-1">
-          {movie.genres.length
-            ? movie.genres
-                .slice(0, 3)
-                .map((g) => g.name)
-                .join(" • ")
-            : "—"}
+        {/* Release year */}
+        <p className="text-xs text-gray-400">
+          {new Date(movie.release_date).getFullYear()}
+        </p>
+
+        {/* Overview */}
+        <p className="text-xs text-gray-300 leading-relaxed line-clamp-3">
+          {truncate(movie.overview)}
         </p>
 
         {/* CTA */}
-        <Link href={`/movies/${movie.id}`} className="block pt-1">
+        <Link href={`/movies/${movie.id}`} className="mt-auto pt-3">
           <Button
             size="sm"
             className="w-full rounded-full bg-primary hover:bg-primary/90"
