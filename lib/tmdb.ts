@@ -1,25 +1,39 @@
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 export async function fetchFromTMDB(endpoint: string) {
-  // Ensure endpoint starts correctly
   const normalizedEndpoint = endpoint.startsWith("/")
     ? endpoint
     : `/${endpoint}`;
 
-  // Ensure correct query separator
   const url =
     `${TMDB_BASE_URL}${normalizedEndpoint}` +
     (normalizedEndpoint.includes("?") ? "&" : "?") +
     `api_key=${process.env.TMDB_API_KEY}`;
 
-  const res = await fetch(url, {
-    next: { revalidate: 60 * 60 }, // 1 hour cache
-  });
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000); // 8s timeout
 
-  if (!res.ok) {
-    console.error("TMDB FETCH FAILED:", url, res.status);
-    throw new Error("Failed to fetch TMDB data");
+    const res = await fetch(url, {
+      signal: controller.signal,
+      next: { revalidate: 60 * 60 },
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.error("TMDB responded with error:", res.status, url);
+      return { results: [] };
+    }
+
+    return await res.json();
+  } catch (error: any) {
+    console.error("TMDB fetch failed:", {
+      url,
+      message: error?.message,
+    });
+
+    // ✅ NEVER crash the app
+    return { results: [] };
   }
-
-  return res.json();
 }
