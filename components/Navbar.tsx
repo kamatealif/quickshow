@@ -69,7 +69,7 @@ export default function Navbar() {
             transition-all duration-300 hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.35)]"
         >
           <Film className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
-          CineBook
+          QuickShow
         </Link>
 
         {/* DESKTOP NAV */}
