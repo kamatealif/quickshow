@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Film, Menu, Ticket, User, LogOut } from "lucide-react";
+import { Film, Menu, User, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +32,7 @@ import { UserButton, useUser } from "@clerk/nextjs";
    NAVBAR
 ---------------------------------------- */
 export default function Navbar() {
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -45,7 +45,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* -------- helper: navigate + close mobile -------- */
   const handleNav = (href: string) => {
     setMobileOpen(false);
     router.push(href);
@@ -73,7 +72,7 @@ export default function Navbar() {
           CineBook
         </Link>
 
-        {/* DESKTOP NAV (unchanged) */}
+        {/* DESKTOP NAV */}
         <NavigationMenu className="hidden md:flex items-center gap-2 bg-white/5 border border-white/10 p-1 rounded-full backdrop-blur-md">
           <NavigationMenuList className="flex gap-1">
             {NAV_LINKS.map((link) => {
@@ -100,14 +99,15 @@ export default function Navbar() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* DESKTOP ACTIONS */}
+        {/* DESKTOP AUTH */}
         <div className="hidden md:flex items-center gap-3">
-          {user ? (
-            <UserMenu user={user} />
+          {isSignedIn ? (
+            <UserMenu />
           ) : (
             <Link
               href="/sign-up"
-              className="px-6 py-2 rounded-full text-sm font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+              className="px-6 py-2 rounded-full text-sm font-semibold
+                bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
             >
               Login
             </Link>
@@ -152,15 +152,16 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* ACCOUNT SECTION */}
-            {user ? (
+            {/* ACCOUNT */}
+            {isSignedIn && user ? (
               <MobileUserMenu user={user} />
             ) : (
               <div className="mt-auto pt-6 border-t border-white/10">
                 <Link
                   href="/sign-up"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full rounded-full bg-primary shadow-lg shadow-primary/20"
+                  className="block w-full text-center px-6 py-3 rounded-full
+                    bg-primary shadow-lg shadow-primary/20 text-white"
                 >
                   Login
                 </Link>
@@ -174,7 +175,7 @@ export default function Navbar() {
 }
 
 /* ---------------------------------------
-   DATA
+   NAV LINKS
 ---------------------------------------- */
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -186,7 +187,7 @@ const NAV_LINKS = [
 /* ---------------------------------------
    USER MENUS
 ---------------------------------------- */
-function UserMenu({ user }: { user: { name: string } }) {
+function UserMenu() {
   return (
     <UserButton
       appearance={{
@@ -200,14 +201,20 @@ function UserMenu({ user }: { user: { name: string } }) {
   );
 }
 
-function MobileUserMenu({ user }: { user: { name: string } }) {
+function MobileUserMenu({ user }: { user: any }) {
+  const displayName =
+    user.firstName ||
+    user.username ||
+    user.emailAddresses?.[0]?.emailAddress ||
+    "User";
+
   return (
     <div className="mt-auto pt-6 border-t border-white/10 flex flex-col gap-4">
       <div className="flex items-center gap-3 text-white">
         <Avatar className="h-9 w-9">
-          <AvatarFallback>{user.name[0]}</AvatarFallback>
+          <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
         </Avatar>
-        <span className="font-medium">{user.name}</span>
+        <span className="font-medium">{displayName}</span>
       </div>
 
       <Button variant="outline" className="justify-start">
