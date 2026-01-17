@@ -1,60 +1,90 @@
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
-async function fetchWithTimeout(
+/**
+ * Safe fetch with timeout.
+ * - Never throws
+ * - Returns null on failure
+ */
+async function safeFetch(
   url: string,
   options: RequestInit,
   timeoutMs = 15000
-) {
+): Promise<Response | null> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     return await fetch(url, {
       ...options,
       signal: controller.signal,
     });
+  } catch {
+    return null;
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(timeoutId);
   }
 }
 
+/**
+ * TMDB fetcher
+ * ✔ Never throws
+ * ✔ Safe for build-time prerender
+ * ✔ Handles network timeouts
+ * ✔ Handles rate limits
+ * ✔ Retries once
+ * ✔ Silent in production
+ */
 export async function fetchFromTMDB(endpoint: string) {
-  const token = process.env.TMDB_READ_TOKEN;
+  try {
+    const token = process.env.TMDB_READ_TOKEN;
 
-  if (!token) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("TMDB_READ_TOKEN is not set in environment variables.");
+    // 🔒 Build + runtime safe
+    if (!token) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "TMDB_READ_TOKEN missing — TMDB data will be skipped."
+        );
+      }
+      return null;
     }
-    return null;
-  }
 
-  const url = `${TMDB_BASE_URL}${
-    endpoint.startsWith("/") ? endpoint : `/${endpoint}`
-  }`;
+    const normalizedEndpoint = endpoint.startsWith("/")
+      ? endpoint
+      : `/${endpoint}`;
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      const res = await fetchWithTimeout(
+    const url = `${TMDB_BASE_URL}${normalizedEndpoint}`;
+
+    // 🔁 Retry once on network failure
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await safeFetch(
         url,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          // 🔥 heavy caching (homepage-safe)
+          // 🔥 aggressive caching (homepage safe)
           next: { revalidate: 60 * 60 * 12 }, // 12 hours
         },
         15000
       );
 
-      if (!res.ok) return null;
-      return await res.json();
-    } catch {
-      if (attempt === 2 && process.env.NODE_ENV === "development") {
-        console.warn("TMDB request failed (network/timeout):", url);
-      }
-    }
-  }
+      // Network failure / timeout
+      if (!res) continue;
 
-  return null;
+      // Rate limit
+      if (res.status === 429) return null;
+
+      // Other HTTP errors
+      if (!res.ok) return null;
+
+      return await res.json();
+    }
+
+    // All attempts failed
+    return null;
+  } catch {
+    // 🚫 ABSOLUTE GUARANTEE: never crash
+    return null;
+  }
 }
