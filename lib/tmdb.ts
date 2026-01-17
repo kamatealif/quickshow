@@ -22,7 +22,10 @@ export async function fetchFromTMDB(endpoint: string) {
   const token = process.env.TMDB_READ_TOKEN;
 
   if (!token) {
-    throw new Error("TMDB_READ_TOKEN is missing");
+    if (process.env.NODE_ENV === "development") {
+      console.warn("TMDB_READ_TOKEN is not set in environment variables.");
+    }
+    return null;
   }
 
   const url = `${TMDB_BASE_URL}${
