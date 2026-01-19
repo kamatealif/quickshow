@@ -1,26 +1,22 @@
-import {
-  pgTable,
-  uuid,
-  integer,
-  text,
-  numeric,
-  date,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, integer, doublePrecision, bigint } from "drizzle-orm/pg-core";
 
 export const movies = pgTable("movies", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  tmdbId: integer("tmdb_id").unique(),
-
-  title: text("title").notNull(),
-  overview: text("overview"),
-  releaseDate: date("release_date"),
-  rating: numeric("rating", { precision: 3, scale: 1 }),
-
+  imdbId: text("imdb_id").primaryKey(),
+  titleX: text("title_x"),
   posterPath: text("poster_path"),
-  backdropPath: text("backdrop_path"),
-  language: text("language"),
-  popularity: numeric("popularity"),
-
-  createdAt: timestamp("created_at").defaultNow(),
+  wikiLink: text("wiki_link"),
+  titleY: text("title_y"),
+  originalTitle: text("original_title"),
+  isAdult: integer("is_adult"),
+  yearOfRelease: integer("year_of_release"),
+  runtime: text("runtime"),
+  genres: text("genres"),
+  imdbRating: doublePrecision("imdb_rating"),
+  imdbVotes: bigint("imdb_votes", { mode: "number" }),
+  story: text("story"),
+  summary: text("summary"),
+  tagline: text("tagline"),
+  actors: text("actors"),
+  winsNominations: text("wins_nominations"),
+  releaseDate: text("release_date"),
 });
