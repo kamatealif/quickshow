@@ -5,6 +5,7 @@ import { shadcn } from "@clerk/themes";
 import { ThemeProvider } from "@/components/homepage/theme-provider";
 import "./globals.css";
 import Navbar from "@/components/homepage/Navbar";
+import Footer from "@/components/homepage/footer";
 
 const notoSans = Noto_Sans({ variable: "--font-sans" });
 
@@ -47,6 +48,7 @@ export default function RootLayout({
           >
             <Navbar />
             {children}
+            <Footer/>
           </ThemeProvider>
         </body>
       </html>

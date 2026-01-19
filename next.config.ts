@@ -1,18 +1,16 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'upload.wikimedia.org',
-        pathname: '/**',
+        hostname: 'images.unsplash.com',
       },
       {
         protocol: 'https',
-        hostname: 'image.tmdb.org',
-        pathname: '/**',
+        hostname: '**.wikimedia.org', // Use double asterisks for all subdomains
       },
-      // If you have other sources in your database, add them here
     ],
   },
 };
