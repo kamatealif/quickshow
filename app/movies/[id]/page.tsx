@@ -40,10 +40,19 @@ export default async function MovieDetailsPage({
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
   const votes = movie.vote_count ? movie.vote_count.toLocaleString() : "0";
 
+  function tmdbBackdrop(backdrop_path: string): string {
+    if (!backdrop_path) return "/placeholder-backdrop.jpg";
+    return `https://image.tmdb.org/t/p/original${backdrop_path}`;
+  }
+  function tmdbPoster(poster_path: string): string {
+    if (!poster_path) return "/placeholder-poster.jpg";
+    return `https://image.tmdb.org/t/p/w500${poster_path}`;
+  }
+
+  /* FIX: Added pt-20 (mobile) and pt-32 (desktop) to push content 
+     below your fixed navbar. 
+  */
   return (
-    /* FIX: Added pt-20 (mobile) and pt-32 (desktop) to push content 
-       below your fixed navbar. 
-    */
     <main className="bg-[#020202] text-white min-h-screen pt-20 md:pt-32">
       {/* HERO SECTION */}
       <section className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
