@@ -1,24 +1,17 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Calendar, ArrowLeft, Ticket, Languages } from "lucide-react";
-
-const tmdbBackdrop = (path: string | null) =>
-  path ? `https://image.tmdb.org/t/p/original${path}` : "";
-
-const tmdbPoster = (path: string | null) =>
-  path ? `https://image.tmdb.org/t/p/w500${path}` : "";
 
 export default async function MovieDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // Await params for Next.js 15 compatibility
   const { id } = await params;
 
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: movie, error } = await supabase
     .from("movies")

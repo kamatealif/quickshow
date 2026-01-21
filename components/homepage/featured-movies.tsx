@@ -1,4 +1,4 @@
-import MovieCard from "../movie-card";
+import MovieCard from "@/components/movies/movie-card";
 
 export default function FeaturedMovies({ movies }: { movies: any[] }) {
   return (

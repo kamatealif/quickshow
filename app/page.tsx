@@ -1,9 +1,9 @@
 import HomeHero from "@/components/homepage/HomeHero";
 import TrendingSlider from "@/components/homepage/TrendingSlider";
 import TrendingRow from "@/components/homepage/TrendingRow";
-import MovieCard from "@/components/movie-card";
+import MovieCard from "@/components/movies/movie-card";
 import WhyQuickShow from "@/components/homepage/WhyQuickShow";
-import { createClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 // TMDB helpers
 const tmdbBackdrop = (path: string | null) =>
@@ -13,7 +13,7 @@ const tmdbPoster = (path: string | null) =>
   path ? `https://image.tmdb.org/t/p/w500${path}` : "";
 
 export default async function HomePage() {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
 
   /* ───────────────────────── HERO (RANDOM EACH REFRESH) ───────────────────────── */
 

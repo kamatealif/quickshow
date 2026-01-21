@@ -1,8 +1,8 @@
-import MovieCard from "@/components/movie-card";
+import MovieCard from "@/components/movies/movie-card";
 import MovieFilters from "@/components/movies/MovieFilters";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { ChevronRight, ChevronLeft, X, Film } from "lucide-react";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ChevronRight, ChevronLeft, Film } from "lucide-react";
 
 const tmdbPoster = (path: string | null) =>
   path ? `https://image.tmdb.org/t/p/w500${path}` : "";
@@ -19,7 +19,7 @@ export default async function MoviesPage({
     page?: string;
   }>;
 }) {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
   const params = await searchParams;
 
   const search = params.q ?? "";
