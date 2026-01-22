@@ -128,10 +128,13 @@ export default async function MovieDetailsPage({
 
               {/* Primary Actions */}
               <div className="flex flex-wrap gap-4">
-                <button className="px-10 py-4 bg-[#e11d48] text-white rounded-full font-bold flex items-center gap-2 hover:bg-[#fb1d52] transition active:scale-95 shadow-lg shadow-rose-600/20">
+                <Link
+                  href={`/bookings/${movie.id}`}
+                  className="px-10 py-4 bg-[#e11d48] text-white rounded-full font-bold flex items-center gap-2 hover:bg-[#fb1d52] transition active:scale-95 shadow-lg shadow-rose-600/20"
+                >
                   <Ticket className="w-5 h-5" />
                   Book Tickets
-                </button>
+                </Link>
 
                 <button className="px-10 py-4 bg-white/5 border border-white/10 backdrop-blur-md rounded-full font-bold hover:bg-white/10 transition">
                   Watch Trailer

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
 
 import { ThemeProvider } from "@/components/homepage/theme-provider";
-import "./globals.css";
+import "@/app/globals.css";
+import Navbar from "@/components/homepage/Navbar";
+import Footer from "@/components/homepage/footer";
 
 const notoSans = Noto_Sans({ variable: "--font-sans" });
 
@@ -38,7 +40,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Navbar />
           {children}
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
