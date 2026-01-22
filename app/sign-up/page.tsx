@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -18,19 +19,25 @@ import {
   Mail,
   Lock,
   Loader2,
-  UserPlus,
-  CheckCircle2,
+  Ticket,
+  User,
+  Eye,
+  EyeOff,
+  ChevronRight,
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function SignUpPage() {
-  const supabase = createSupabaseBrowserClient();
   const router = useRouter();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,196 +46,249 @@ export default function SignUpPage() {
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
-
-    if (password !== confirmPassword) {
+    if (!passwordsMatch) {
       setError("Passwords do not match.");
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    setMessage(null);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      if (!data.session) {
+        setMessage(
+          "Verification email sent! Please check your inbox to confirm your membership.",
+        );
+      } else {
+        router.push("/profile");
+      }
+    } catch (err) {
+      setError("System encountered an error. Please try again.");
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    if (!data.session) {
-      setMessage("Verification email sent. Please check your inbox.");
-      setIsLoading(false);
-      return;
-    }
-
-    router.push("/");
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+    <div className="relative min-h-screen flex items-center justify-center bg-background px-4 overflow-hidden">
+      {/* SOFT AMBIENT BACKGROUND */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
 
-      <Card className="w-full max-w-md border-border bg-card/40 backdrop-blur-xl shadow-2xl rounded-sm">
-        <CardHeader className="space-y-1 flex flex-col items-center text-center pb-8">
-          <div className="p-4 bg-primary/10 rounded-sm border border-border text-primary mb-4">
-            <UserPlus className="w-8 h-8" />
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight uppercase">
-            Create Account
-          </CardTitle>
-          <CardDescription className="text-muted-foreground font-mono text-[10px] tracking-[0.2em] uppercase">
-            User Registration
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          {!message ? (
-            <form onSubmit={handleSignUp} className="space-y-4">
-              {/* Email */}
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="email"
-                  className="text-[11px] font-bold uppercase text-muted-foreground ml-1"
-                >
-                  Email
-                </Label>
-                <div className="relative group">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    className="pl-11 h-12 bg-background/50 border-border focus-visible:ring-primary/20 rounded-sm text-base font-mono transition-all"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="password"
-                  className="text-[11px] font-bold uppercase text-muted-foreground ml-1"
-                >
-                  Password
-                </Label>
-                <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-11 h-12 bg-background/50 border-border focus-visible:ring-primary/20 rounded-sm text-base font-mono transition-all"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="confirm-password"
-                  className="text-[11px] font-bold uppercase text-muted-foreground ml-1"
-                >
-                  Confirm Password
-                </Label>
-                <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                    className={`pl-11 h-12 bg-background/50 border-border focus-visible:ring-primary/20 rounded-sm text-base font-mono transition-all ${
-                      passwordsMatch
-                        ? "border-green-500/50 focus-visible:border-green-500"
-                        : ""
-                    }`}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                {passwordsMatch && (
-                  <div className="flex items-center gap-1.5 mt-1 ml-1 animate-in fade-in slide-in-from-left-2 duration-300">
-                    <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                    <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider font-mono">
-                      Passwords matched
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {error && (
-                <div className="p-3 rounded-sm bg-destructive/10 border border-destructive/20 mt-2">
-                  <p className="text-[11px] font-bold text-destructive uppercase text-center tracking-tight">
-                    {error}
-                  </p>
-                </div>
-              )}
-
-              <Button
-                disabled={isLoading}
-                className="w-full h-12 bg-primary text-primary-foreground hover:opacity-90 font-bold transition-all rounded-sm active:scale-[0.98] mt-4 shadow-lg shadow-primary/5"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    REGISTERING...
-                  </>
-                ) : (
-                  "SIGN UP"
-                )}
-              </Button>
-            </form>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-              <CheckCircle2 className="w-12 h-12 text-primary" />
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold uppercase tracking-tight">
-                  Check your email
-                </h3>
-                <p className="text-sm text-muted-foreground font-mono leading-relaxed">
-                  {message}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full border-border h-12 rounded-sm font-bold text-xs"
-                onClick={() => setMessage(null)}
-              >
-                RETURN TO SIGN UP
-              </Button>
-            </div>
-          )}
-        </CardContent>
-
-        <CardFooter className="flex flex-col items-center gap-4 border-t border-border/50 py-6">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-tight">
-              Already have an account?
-            </span>
-            <Link
-              href="/sign-in"
-              className="text-[11px] font-bold text-primary hover:underline underline-offset-4 uppercase tracking-tight"
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md z-10"
+      >
+        <Card className="border-white/5 bg-card/40 backdrop-blur-3xl shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="space-y-3 flex flex-col items-center text-center pt-12 pb-8">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="p-4 bg-primary/10 rounded-3xl text-primary mb-2 shadow-inner"
             >
-              Sign In
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+              <Ticket className="w-8 h-8" />
+            </motion.div>
+            <div className="space-y-1">
+              <CardTitle className="text-3xl font-black tracking-tight uppercase italic">
+                Join the Club
+              </CardTitle>
+              <CardDescription className="text-muted-foreground font-mono text-[10px] tracking-[0.2em] uppercase">
+                Start your movie journey
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <CardContent className="px-10">
+            <AnimatePresence mode="wait">
+              {!message ? (
+                <motion.form
+                  key="signup-form"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onSubmit={handleSignUp}
+                  className="space-y-5"
+                >
+                  {/* FULL NAME */}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-3">
+                      Full Name
+                    </Label>
+                    <div className="relative group">
+                      <User className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        placeholder="John Doe"
+                        className="pl-14 h-14 bg-background/50 border-white/5 rounded-2xl font-mono text-sm focus:ring-primary/20 transition-all shadow-inner"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* EMAIL */}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-3">
+                      Email Address
+                    </Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        className="pl-14 h-14 bg-background/50 border-white/5 rounded-2xl font-mono text-sm focus:ring-primary/20 transition-all shadow-inner"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* PASSWORD */}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-3">
+                      Password
+                    </Label>
+                    <div className="relative group">
+                      <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        className="pl-14 pr-12 h-14 bg-background/50 border-white/5 rounded-2xl font-mono text-sm focus:ring-primary/20 transition-all shadow-inner"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-primary transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* CONFIRM PASSWORD */}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-3">
+                      Confirm Password
+                    </Label>
+                    <div className="relative group">
+                      <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        className={`pl-14 h-14 bg-background/50 border-white/5 rounded-2xl font-mono text-sm transition-all shadow-inner ${
+                          passwordsMatch ? "border-primary/20" : ""
+                        }`}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    {passwordsMatch && (
+                      <div className="flex items-center gap-1.5 ml-3 animate-in fade-in slide-in-from-left-2">
+                        <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-[9px] font-bold text-primary uppercase tracking-wider font-mono">
+                          Credentials matched
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="p-4 bg-destructive/5 border border-destructive/10 rounded-2xl"
+                    >
+                      <p className="text-[10px] font-bold text-destructive uppercase text-center tracking-wide">
+                        {error}
+                      </p>
+                    </motion.div>
+                  )}
+
+                  <Button
+                    disabled={
+                      isLoading || (password.length > 0 && !passwordsMatch)
+                    }
+                    className="group relative w-full h-14 font-black rounded-2xl transition-all shadow-xl shadow-primary/10 hover:shadow-primary/20 mt-4"
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {isLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <>
+                          CREATE ACCOUNT{" "}
+                          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </span>
+                  </Button>
+                </motion.form>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center text-center space-y-6 py-12"
+                >
+                  <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center shadow-inner">
+                    <Mail className="h-10 w-10 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold uppercase tracking-tight italic">
+                      Success!
+                    </h3>
+                    <p className="text-sm text-muted-foreground/70 leading-relaxed px-4">
+                      {message}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="h-12 rounded-2xl px-8 font-bold text-xs"
+                    asChild
+                  >
+                    <Link href="/sign-in">GO TO SIGN IN</Link>
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </CardContent>
+
+          <CardFooter className="border-t border-white/5 py-10 mt-8 bg-white/[0.01] flex flex-col items-center">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+              <span className="text-muted-foreground/40">
+                Already a member?
+              </span>
+              <Link
+                href="/sign-in"
+                className="text-primary hover:underline underline-offset-4"
+              >
+                Sign In
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 }

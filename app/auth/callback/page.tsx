@@ -11,7 +11,7 @@ export default async function AuthCallbackPage({
   const code = searchParams.code;
 
   if (!code) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   await supabase.auth.exchangeCodeForSession(code);

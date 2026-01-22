@@ -24,21 +24,18 @@ export default function LogoutButton() {
 
   return (
     <Button
-      variant="destructive"
+      variant="ghost"
       onClick={handleLogout}
       disabled={isLoading}
-      className="w-full h-12 rounded-sm font-semibold transition-all active:scale-[0.99] shadow-lg shadow-destructive/10"
+      className="h-11 px-6 rounded-2xl font-bold text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all active:scale-[0.98]"
     >
       {isLoading ? (
-        <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Logging out...
-        </>
+        <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
-        <>
-          <LogOut className="mr-2 h-5 w-5" />
-          Logout
-        </>
+        <div className="flex items-center gap-2">
+          <LogOut className="h-4 w-4" />
+          <span>Sign Out</span>
+        </div>
       )}
     </Button>
   );

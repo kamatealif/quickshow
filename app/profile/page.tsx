@@ -2,48 +2,47 @@
 
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useRequireAuth } from "@/hooks/userRequireAuth";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 import {
   Loader2,
-  Save,
   X,
-  Ticket,
   Calendar,
-  Clock,
   MapPin,
-  User,
-  ShieldCheck,
+  Armchair,
+  Ticket,
+  ChevronRight,
 } from "lucide-react";
 
 import LogoutButton from "./logout-button";
+import ProfileAvatar from "@/components/profile/Avatar";
 
-/* ───────────────────────────────────────────────────────────── */
+/* ───────────────── TYPES ───────────────── */
 
 type Profile = {
+  id: string;
   email: string | null;
-  is_admin: boolean;
   full_name: string | null;
+  avatar_url: string | null;
+  is_admin: boolean;
 };
 
-const MOCK_BOOKINGS = [
-  {
-    id: "BK-9921",
-    movie: "Interstellar: Re-Release",
-    date: "Jan 24, 2026",
-    time: "07:30 PM",
-    seats: "H-12, H-13",
-    theater: "Screen 4 – IMAX",
-  },
-];
-
-/* ───────────────────────────────────────────────────────────── */
+type Booking = {
+  id: string;
+  movie_title: string;
+  show_date: string;
+  show_time: string;
+  seats: string;
+  theater_name: string;
+};
 
 export default function ProfilePage() {
   const supabase = createSupabaseBrowserClient();
@@ -54,31 +53,38 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
 
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+
   useEffect(() => {
     if (!userId) return;
-    async function loadProfile() {
-      const { data } = await supabase
-        .from("profiles")
-        .select("email, is_admin, full_name")
-        .eq("id", userId)
-        .single();
+    async function loadData() {
+      const [pRes, bRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).single(),
+        supabase
+          .from("bookings")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false }),
+      ]);
 
-      if (data) {
-        setProfile(data);
-        setFullName(data.full_name ?? "");
+      if (pRes.data) {
+        setProfile(pRes.data);
+        setFullName(pRes.data.full_name ?? "");
       }
+      if (bRes.data) setBookings(bRes.data);
+      setLoadingBookings(false);
     }
-    loadProfile();
+    loadData();
   }, [userId, supabase]);
 
   async function handleUpdateProfile() {
-    if (!userId) return;
+    if (!userId || !fullName.trim()) return;
     setUpdating(true);
     const { error } = await supabase
       .from("profiles")
       .update({ full_name: fullName })
       .eq("id", userId);
-
     if (!error) {
       setProfile((p) => (p ? { ...p, full_name: fullName } : p));
       setIsEditing(false);
@@ -89,189 +95,193 @@ export default function ProfilePage() {
   if (loading || (!profile && userId)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-10 h-10 animate-spin text-primary/20" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* ─── NEAT ALIGNED FIXED HEADER ─── */}
-      <nav className="fixed top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-primary flex items-center justify-center rounded-sm">
-              <User className="w-5 h-5 text-primary-foreground" />
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+      {/* NAVBAR */}
+      <nav className="fixed top-20 w-full z-50 border-b border-white/5 bg-background/70 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-8 h-20 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+              <Ticket className="w-5 h-5 text-primary" />
             </div>
-            <span className="font-black uppercase tracking-tighter italic text-lg">
-              User.Terminal
+            <span className="font-bold text-xl tracking-tight uppercase italic text-primary/90">
+              Cinema.Club
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            {profile?.is_admin && (
-              <Badge
-                variant="outline"
-                className="hidden md:flex rounded-sm border-primary/50 text-primary text-[10px] uppercase font-bold"
-              >
-                <ShieldCheck className="w-3 h-3 mr-1" /> Admin
-              </Badge>
-            )}
-            <div className="h-4 w-[1px] bg-border mx-2 hidden md:block" />
-            <LogoutButton />
-          </div>
+          <LogoutButton />
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-6 pt-32 pb-20 space-y-12">
-        {/* Page Title Section */}
-        <section className="space-y-2">
-          <h1 className="text-4xl font-black uppercase italic tracking-tighter">
-            {profile?.full_name || "Account Profile"}
-          </h1>
-          <div className="flex items-center gap-2 text-muted-foreground text-sm uppercase tracking-widest font-bold">
-            <span className="text-primary">●</span> Active Session:{" "}
-            {profile?.email}
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* ───────── IDENTITY PANEL ───────── */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="flex items-center gap-2 border-l-2 border-primary pl-4">
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">
-                Identity Settings
-              </h2>
-            </div>
-
-            <Card className="rounded-sm border-border bg-card/50 shadow-none">
-              <CardContent className="pt-6 space-y-6">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-end">
-                    <Label className="text-[10px] uppercase font-black text-muted-foreground">
-                      Display Name
-                    </Label>
-                    {!isEditing && (
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="text-primary text-[10px] font-black uppercase hover:underline"
-                      >
-                        [ Modify ]
-                      </button>
-                    )}
-                  </div>
-
-                  <Input
-                    disabled={!isEditing}
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="h-10 rounded-sm border-border bg-background font-bold uppercase text-xs"
+      {/* Main Container - Adjusted Padding Top to pt-60 for extra margin */}
+      <main className="max-w-7xl mx-auto px-8 pt-60 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* LEFT COLUMN: PROFILE CARD - Adjusted sticky top to match main padding */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-60">
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Card className="border-white/5 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.4)] bg-card/40 backdrop-blur-md rounded-[2.5rem] overflow-hidden">
+                <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent" />
+                <CardContent className="p-10 -mt-16 space-y-8 flex flex-col items-center">
+                  <ProfileAvatar
+                    uid={userId!}
+                    url={profile?.avatar_url || null}
+                    name={profile?.full_name || ""}
+                    onUpload={(url) =>
+                      setProfile((p) => (p ? { ...p, avatar_url: url } : p))
+                    }
                   />
 
-                  {isEditing && (
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleUpdateProfile}
-                        disabled={updating}
-                        className="flex-1 h-9 rounded-sm text-[10px] font-black uppercase"
-                      >
-                        {updating ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          "Confirm"
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-9 px-3 rounded-sm border-border"
-                        onClick={() => {
-                          setFullName(profile?.full_name ?? "");
-                          setIsEditing(false);
-                        }}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-muted-foreground">
-                    Node ID (Email)
-                  </Label>
-                  <div className="text-xs font-mono p-3 bg-muted/50 rounded-sm border border-border break-all">
-                    {profile?.email}
+                  <div className="text-center space-y-1">
+                    <h2 className="text-2xl font-black tracking-tight">
+                      {profile?.full_name || "Member"}
+                    </h2>
+                    <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-[0.2em]">
+                      {profile?.email}
+                    </p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  <Separator className="bg-white/5" />
+
+                  <div className="w-full space-y-5">
+                    <div className="space-y-2.5">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground/60 ml-3 tracking-widest">
+                        Display Name
+                      </Label>
+                      <Input
+                        disabled={!isEditing}
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="bg-background/50 border-white/5 h-14 rounded-2xl px-6 font-medium transition-all focus:ring-primary/20"
+                      />
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                      {isEditing ? (
+                        <motion.div
+                          key="edit-mode"
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex gap-2"
+                        >
+                          <Button
+                            onClick={handleUpdateProfile}
+                            disabled={updating}
+                            className="flex-1 h-14 rounded-2xl font-bold shadow-xl shadow-primary/10 transition-all hover:scale-[1.02]"
+                          >
+                            {updating ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              "Save Changes"
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-14 w-14 rounded-2xl border-white/10"
+                            onClick={() => setIsEditing(false)}
+                          >
+                            <X className="w-5 h-5" />
+                          </Button>
+                        </motion.div>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          className="w-full h-14 rounded-2xl font-bold hover:bg-secondary/70 transition-all"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          Edit Profile
+                        </Button>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
 
-          {/* ───────── TRANSMISSIONS PANEL ───────── */}
-          <div className="lg:col-span-8 space-y-6">
-            <div className="flex items-center gap-2 border-l-2 border-primary pl-4">
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">
-                Active Transmissions
-              </h2>
+          {/* RIGHT COLUMN: BOOKINGS */}
+          <div className="lg:col-span-8 space-y-8">
+            <div className="flex items-center justify-between px-3">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">
+                  My Tickets
+                </h2>
+                <p className="text-xs text-muted-foreground font-medium">
+                  Manage your upcoming movie experiences
+                </p>
+              </div>
+              <Badge
+                variant="secondary"
+                className="rounded-full bg-primary/5 text-primary border-none px-5 py-1.5 font-bold"
+              >
+                {bookings.length} Total
+              </Badge>
             </div>
 
-            <div className="grid gap-4">
-              {MOCK_BOOKINGS.map((booking) => (
-                <Card
-                  key={booking.id}
-                  className="rounded-sm border-border hover:border-primary/50 transition-all bg-card/30 group"
-                >
-                  <CardContent className="p-0 flex flex-col md:flex-row h-full">
-                    <div className="p-6 flex-1 space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Badge className="rounded-none bg-primary text-[9px] font-black italic">
-                          {booking.id}
-                        </Badge>
-                        <div className="h-[1px] flex-1 bg-border" />
-                      </div>
+            <div className="grid gap-5">
+              {loadingBookings ? (
+                <div className="py-24 flex justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary/20" />
+                </div>
+              ) : bookings.length === 0 ? (
+                <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[2.5rem] bg-card/10">
+                  <Ticket className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+                  <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">
+                    No movies booked yet
+                  </p>
+                </div>
+              ) : (
+                bookings.map((b, i) => (
+                  <motion.div
+                    key={b.id}
+                    initial={{ opacity: 0, x: 15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <Card className="group border-white/5 bg-card/30 hover:bg-card/50 transition-all duration-300 rounded-[2.2rem] overflow-hidden cursor-default">
+                      <CardContent className="p-8 flex flex-col md:flex-row justify-between items-center gap-8">
+                        <div className="flex-1 space-y-5 text-center md:text-left w-full">
+                          <div className="space-y-2">
+                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] opacity-80">
+                              Confirmed Ticket
+                            </span>
+                            <h3 className="text-4xl font-black uppercase italic tracking-tighter leading-none group-hover:text-primary transition-colors">
+                              {b.movie_title}
+                            </h3>
+                          </div>
 
-                      <h3 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-primary transition-colors">
-                        {booking.movie}
-                      </h3>
-
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black uppercase text-muted-foreground">
-                            Date
-                          </p>
-                          <p className="text-[11px] font-bold uppercase">
-                            {booking.date}
-                          </p>
+                          <div className="flex flex-wrap justify-center md:justify-start gap-6 pt-1">
+                            <div className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest">
+                              <Calendar className="w-4 h-4 text-primary/40" />{" "}
+                              {new Date(b.show_date).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest">
+                              <MapPin className="w-4 h-4 text-primary/40" />{" "}
+                              {b.theater_name}
+                            </div>
+                            <div className="flex items-center gap-2.5 text-sm font-black text-primary uppercase tracking-tighter">
+                              <Armchair className="w-4 h-4" /> Seats {b.seats}
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black uppercase text-muted-foreground">
-                            Time
-                          </p>
-                          <p className="text-[11px] font-bold uppercase">
-                            {booking.time}
-                          </p>
-                        </div>
-                        <div className="space-y-1 col-span-2 md:col-span-1">
-                          <p className="text-[8px] font-black uppercase text-muted-foreground">
-                            Location
-                          </p>
-                          <p className="text-[11px] font-bold uppercase truncate">
-                            {booking.theater}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="w-full md:w-32 bg-muted/50 flex flex-col items-center justify-center p-4 border-t md:border-t-0 md:border-l border-border">
-                      <span className="text-[8px] font-black uppercase text-muted-foreground mb-1">
-                        Seats
-                      </span>
-                      <span className="text-xl font-black text-primary italic">
-                        {booking.seats}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-16 w-16 rounded-[1.5rem] bg-background/50 group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0 shadow-lg border-white/5"
+                        >
+                          <ChevronRight className="w-7 h-7" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))
+              )}
             </div>
           </div>
         </div>
