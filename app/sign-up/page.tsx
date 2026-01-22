@@ -86,7 +86,8 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-background px-4 overflow-hidden">
+    // Added pt-32 to clear the navbar and pb-12 for bottom breathing room
+    <div className="relative min-h-screen flex flex-col items-center justify-start bg-background px-4 pt-32 pb-12 overflow-x-hidden">
       {/* SOFT AMBIENT BACKGROUND */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
@@ -107,7 +108,7 @@ export default function SignUpPage() {
             </motion.div>
             <div className="space-y-1">
               <CardTitle className="text-3xl font-black tracking-tight uppercase italic">
-                Join the Club
+                Join QuickShow
               </CardTitle>
               <CardDescription className="text-muted-foreground font-mono text-[10px] tracking-[0.2em] uppercase">
                 Start your movie journey
@@ -231,14 +232,14 @@ export default function SignUpPage() {
                     disabled={
                       isLoading || (password.length > 0 && !passwordsMatch)
                     }
-                    className="group relative w-full h-14 font-black rounded-2xl transition-all shadow-xl shadow-primary/10 hover:shadow-primary/20 mt-4"
+                    className="group relative w-full h-14 font-black rounded-2xl transition-all shadow-xl shadow-primary/10 hover:shadow-primary/20 mt-4 uppercase italic tracking-tighter"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       {isLoading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
                         <>
-                          CREATE ACCOUNT{" "}
+                          Create Account{" "}
                           <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </>
                       )}
