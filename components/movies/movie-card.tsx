@@ -83,13 +83,14 @@ export default function MovieCard({
           </Button>
 
           {/* Book Now - Main Action */}
+          {/* Book Now - Main Action */}
           <Button
             className="col-span-4 h-12 rounded-2xl font-black uppercase italic tracking-tighter shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             asChild
           >
             <Link href={`/bookings/${id}`}>
               <Ticket className="w-4 h-4 mr-2" />
-              Quick Book
+              Book Tickets
             </Link>
           </Button>
         </div>
