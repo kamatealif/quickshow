@@ -1,15 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  Film,
-  Theater,
-  CalendarClock,
-  Ticket,
-  LayoutDashboard,
-  ChevronRight,
-  ShieldCheck,
-} from "lucide-react";
+import { LayoutDashboard, Film, Building2, Ticket, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default async function AdminLayout({
   children,
@@ -31,79 +24,96 @@ export default async function AdminLayout({
 
   if (!profile?.is_admin) redirect("/");
 
+  const nav = [
+    {
+      label: "Dashboard",
+      href: "/admin",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Theaters",
+      href: "/admin/theaters",
+      icon: Building2,
+    },
+    {
+      label: "Showtimes",
+      href: "/admin/showtimes",
+      icon: Film,
+    },
+    {
+      label: "Bookings",
+      href: "/admin/bookings",
+      icon: Ticket,
+    },
+    {
+      label: "Users",
+      href: "/admin/users",
+      icon: Users,
+    },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20">
-      {/* PREMIUM SIDEBAR */}
-      <aside className="w-72 border-r border-white/5 bg-card/40 backdrop-blur-3xl sticky top-0 h-screen flex flex-col">
-        <div className="h-24 flex items-center px-8">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-            </div>
-            <span className="font-black text-xl tracking-tighter uppercase italic">
+    <div className="flex min-h-screen bg-black text-white">
+      {/* SIDEBAR */}
+      <aside className="w-72 border-r border-white/10 bg-zinc-950/80 backdrop-blur-xl">
+        <div className="p-6 space-y-8">
+          {/* BRAND */}
+          <div className="space-y-1">
+            <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted-foreground opacity-60">
+              Control Panel
+            </p>
+            <h1 className="text-2xl font-black uppercase tracking-tight">
               Quick<span className="text-primary">Admin</span>
-            </span>
+            </h1>
           </div>
-        </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4">
-          <NavItem href="/admin" icon={LayoutDashboard}>
-            Dashboard
-          </NavItem>
-          <NavItem href="/admin/theaters" icon={Theater}>
-            Theaters
-          </NavItem>
-          <NavItem href="/admin/showtimes" icon={CalendarClock}>
-            Showtimes
-          </NavItem>
-          <NavItem href="/admin/bookings" icon={Ticket}>
-            Bookings
-          </NavItem>
-        </nav>
-
-        <div className="p-6 border-t border-white/5">
-          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">
-              System.Status
-            </p>
-            <p className="text-[11px] font-mono text-primary uppercase mt-1">
-              Node_Online
-            </p>
-          </div>
+          {/* NAV */}
+          <nav className="space-y-2">
+            {nav.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavItem
+                  key={item.href}
+                  href={item.href}
+                  icon={<Icon className="w-4 h-4" />}
+                >
+                  {item.label}
+                </NavItem>
+              );
+            })}
+          </nav>
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 p-12 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">{children}</div>
+      {/* CONTENT */}
+      <main className="flex-1 p-10 bg-gradient-to-b from-black to-zinc-950">
+        {children}
       </main>
     </div>
   );
 }
 
+/* ───────────────── NAV ITEM ───────────────── */
+
 function NavItem({
   href,
-  icon: Icon,
+  icon,
   children,
 }: {
   href: string;
-  icon: any;
+  icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between px-5 py-4 rounded-[1.5rem] 
-                 text-muted-foreground hover:text-foreground hover:bg-white/[0.03] 
-                 border border-transparent hover:border-white/5 transition-all"
+      className={cn(
+        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all",
+        "text-zinc-400 hover:text-white hover:bg-white/[0.04]",
+      )}
     >
-      <div className="flex items-center gap-4">
-        <Icon className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
-        <span className="font-black uppercase italic tracking-tighter text-sm">
-          {children}
-        </span>
-      </div>
-      <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-40 -translate-x-2 group-hover:translate-x-0 transition-all" />
+      <span className="text-primary">{icon}</span>
+      {children}
     </Link>
   );
 }
