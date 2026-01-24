@@ -6,126 +6,138 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { PlusCircle, Clapperboard, Monitor, Users } from "lucide-react";
+import { PlusCircle, Monitor, Users, Clapperboard } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function CreateTheaterForm() {
+type CreateTheaterFormProps = {
+  onSuccess?: () => void;
+};
+
+export default function CreateTheaterForm({
+  onSuccess,
+}: CreateTheaterFormProps) {
   const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      alert("You must be logged in to create a theater.");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.from("theaters").insert({
       name: formData.get("name"),
       screen_type: formData.get("screen_type"),
       total_seats: Number(formData.get("total_seats")),
       location: formData.get("location"),
+      owner_id: user.id,
     });
 
     if (error) {
-      console.error(error);
-      alert("Error creating theater");
-    } else {
-      // Cleaner than reload: you could use router.refresh() from next/navigation
-      window.location.reload();
+      console.error("Create theater failed:", error);
+      alert(error.message);
+      setLoading(false);
+      return;
     }
+
+    router.refresh();
     setLoading(false);
+
+    // ✅ close dialog
+    onSuccess?.();
   }
 
+  const inputClass =
+    "rounded-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 focus-visible:outline-none";
+
   return (
-    <div className="space-y-8 max-w-2xl">
-      {/* Header Section to match Dashboard */}
-      <header className="space-y-2">
-        <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">
-          Infrastructure.Module
-        </span>
-        <h1 className="text-4xl font-black tracking-tighter uppercase italic leading-none">
-          Register <span className="text-primary">Theater</span>
-        </h1>
-      </header>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card className="bg-card/40 backdrop-blur-xl border-white/5 rounded-[2.5rem] overflow-hidden">
-          <CardContent className="p-10">
-            <form action={handleSubmit} className="space-y-8">
-              {/* Grid Layout for Inputs */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Name Field */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 flex items-center gap-2">
-                    <Clapperboard className="w-3 h-3 text-primary" /> Venue Name
-                  </Label>
-                  <Input
-                    name="name"
-                    placeholder="Grand Cinema X"
-                    className="bg-white/5 border-white/10 rounded-xl h-12 focus:ring-primary focus:border-primary font-mono text-sm"
-                    required
-                  />
-                </div>
-
-                {/* Location Field */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 flex items-center gap-2">
-                    Location Sync
-                  </Label>
-                  <Input
-                    name="location"
-                    placeholder="Floor 4, Sector B"
-                    className="bg-white/5 border-white/10 rounded-xl h-12 focus:ring-primary focus:border-primary font-mono text-sm"
-                    required
-                  />
-                </div>
-
-                {/* Screen Type Field */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 flex items-center gap-2">
-                    <Monitor className="w-3 h-3 text-primary" /> Display
-                    Protocol
-                  </Label>
-                  <Input
-                    name="screen_type"
-                    placeholder="IMAX / 4DX / DOLBY"
-                    className="bg-white/5 border-white/10 rounded-xl h-12 focus:ring-primary focus:border-primary font-mono text-sm uppercase"
-                    required
-                  />
-                </div>
-
-                {/* Total Seats Field */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-60 flex items-center gap-2">
-                    <Users className="w-3 h-3 text-primary" /> Capacity
-                  </Label>
-                  <Input
-                    name="total_seats"
-                    type="number"
-                    placeholder="000"
-                    className="bg-white/5 border-white/10 rounded-xl h-12 focus:ring-primary focus:border-primary font-mono text-sm"
-                    required
-                  />
-                </div>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="bg-card/60 border border-white/10 rounded-xl">
+        <CardContent className="p-8">
+          <form action={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <Clapperboard className="w-4 h-4" />
+                  Theater Name
+                </Label>
+                <Input
+                  name="name"
+                  placeholder="PVR Phoenix Mall"
+                  required
+                  className={inputClass}
+                />
               </div>
 
-              {/* Submit Button */}
-              <Button
-                disabled={loading}
-                className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-black uppercase italic tracking-tighter text-lg transition-all active:scale-[0.98]"
-              >
-                {loading ? "Processing..." : "Initialize Infrastructure"}
-                <PlusCircle className="ml-2 w-5 h-5" />
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </motion.div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Location
+                </Label>
+                <Input
+                  name="location"
+                  placeholder="Lower Parel, Mumbai"
+                  required
+                  className={inputClass}
+                />
+              </div>
 
-      {/* Visual Feedback Footer */}
-      <p className="text-[9px] font-mono text-muted-foreground opacity-40 text-center uppercase tracking-widest">
-        Secure encrypted uplink established // No unauthorized access
-      </p>
-    </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <Monitor className="w-4 h-4" />
+                  Screen Type
+                </Label>
+                <select
+                  name="screen_type"
+                  required
+                  className={`h-12 w-full bg-background border border-input px-3 text-sm ${inputClass}`}
+                >
+                  <option value="">Select screen type</option>
+                  <option value="standard">Standard</option>
+                  <option value="premium">Premium</option>
+                  <option value="imax">IMAX</option>
+                  <option value="4dx">4DX</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Total Seats
+                </Label>
+                <Input
+                  name="total_seats"
+                  type="number"
+                  placeholder="300"
+                  required
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <Button
+              disabled={loading}
+              className="w-full h-12 text-sm font-semibold rounded-md"
+            >
+              {loading ? "Saving..." : "Add Theater"}
+              <PlusCircle className="ml-2 h-4 w-4" />
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

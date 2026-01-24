@@ -1,18 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import ShowtimeForm from "./showtime-form";
-import ShowtimeTable from "./showtime-table";
+import ShowtimesClient from "./showtimes-client";
 
 export default async function AdminShowtimesPage() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: movies } = await supabase
-    .from("movies")
-    .select("id, title")
-    .order("title");
-
   const { data: theaters } = await supabase
     .from("theaters")
-    .select("id, name, seat_layout")
+    .select("id, name")
     .order("created_at", { ascending: false });
 
   const { data: showtimes } = await supabase
@@ -23,34 +17,19 @@ export default async function AdminShowtimesPage() {
       date,
       time,
       price,
+      available_seats,
+      total_seats,
       status,
-      movies ( title ),
-      theaters ( name )
+      movies (
+        id,
+        title
+      )
     `,
     )
-    .order("date", { ascending: false })
-    .order("time");
+    .order("date", { ascending: true })
+    .order("time", { ascending: true });
 
   return (
-    <div className="space-y-16">
-      {/* HEADER */}
-      <header className="space-y-2">
-        <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">
-          Inventory.Control
-        </span>
-        <h1 className="text-6xl font-black tracking-tighter uppercase italic">
-          Showtimes
-        </h1>
-        <p className="text-muted-foreground italic">
-          Movie × Theater × Time → Seats
-        </p>
-      </header>
-
-      {/* CREATE */}
-      <ShowtimeForm movies={movies || []} theaters={theaters || []} />
-
-      {/* LIST */}
-      <ShowtimeTable showtimes={showtimes || []} />
-    </div>
+    <ShowtimesClient theaters={theaters ?? []} showtimes={showtimes ?? []} />
   );
 }
