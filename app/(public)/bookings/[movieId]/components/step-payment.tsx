@@ -1,113 +1,147 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-// import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Loader2, CreditCard, ShieldCheck } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-type StepPaymentProps = {
-  movie: {
-    title: string;
-  };
-  showtime: {
-    date: string;
-    time: string;
-    price: number;
-    theaters: {
-      name: string;
-    };
-  };
-  seats: string[];
-};
-
-export default function StepPayment({
-  movie,
-  showtime,
-  seats,
-}: StepPaymentProps) {
+export default function StepPayment({ movie, showtime, seats }: any) {
   const supabase = createSupabaseBrowserClient();
-  const { toast } = useToast();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   async function handleConfirmBooking() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    setLoading(true);
 
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to continue.",
-        variant: "destructive",
+    try {
+      // 1. Verify User Session
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (!user || authError) {
+        toast.error("Authentication failed", {
+          description: "Please log in to continue.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 2. Format Data for Postgres Schema
+      // Postgres 'date' expects YYYY-MM-DD
+      // Postgres 'numeric' expects a valid number
+      const bookingPayload = {
+        user_id: user.id,
+        movie_title: movie.title,
+        show_date: new Date(showtime.date).toISOString().split("T")[0],
+        show_time: showtime.time,
+        seats: seats.join(", "),
+        theater_name: showtime.theaters.name,
+        total_amount: parseFloat((seats.length * showtime.price).toFixed(2)),
+      };
+
+      // 3. Perform Insert
+      const { error: dbError } = await supabase
+        .from("bookings")
+        .insert([bookingPayload]);
+
+      if (dbError) {
+        console.error(
+          "Database Insert Failed:",
+          dbError.message,
+          dbError.details,
+        );
+        toast.error("Booking Failed", { description: dbError.message });
+        setLoading(false);
+        return;
+      }
+
+      // 4. Success Flow
+      toast.success("Transaction Complete", {
+        description: `Successfully booked ${seats.length} seats for ${movie.title}.`,
       });
-      return;
+
+      // Navigate to profile to see the new ticket
+      setTimeout(() => router.push("/profile"), 1500);
+    } catch (err) {
+      console.error("Unexpected Error:", err);
+      toast.error("An unexpected error occurred.");
+      setLoading(false);
     }
-
-    // 🔥 INSERT BOOKING (THIS WAS MISSING BEFORE)
-    const { error } = await supabase.from("bookings").insert({
-      user_id: user.id,
-      movie_title: movie.title,
-      show_date: showtime.date,
-      show_time: showtime.time,
-      seats: seats.join(", "),
-      theater_name: showtime.theaters.name,
-    });
-
-    if (error) {
-      console.error(error);
-      toast({
-        title: "Booking failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // ✅ SUCCESS TOAST
-    toast({
-      title: "Booking successful 🎉",
-      description: `Seats ${seats.join(", ")} booked successfully.`,
-    });
-
-    // ✅ REDIRECT TO PROFILE
-    setTimeout(() => {
-      router.push("/profile");
-    }, 1200);
   }
 
-  return (
-    <Card className="rounded-3xl border border-primary/20 bg-card/30">
-      <CardContent className="p-8 space-y-6">
-        <h2 className="text-2xl font-black uppercase italic tracking-tight">
-          Payment
-        </h2>
+  const totalPrice = seats.length * showtime.price;
 
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            <span className="font-semibold text-foreground">Movie:</span>{" "}
-            {movie.title}
-          </p>
-          <p>
-            <span className="font-semibold text-foreground">Show:</span>{" "}
-            {showtime.date} • {showtime.time}
-          </p>
-          <p>
-            <span className="font-semibold text-foreground">Seats:</span>{" "}
-            {seats.join(", ")}
-          </p>
-          <p className="text-lg font-black text-primary">
-            Total ₹{seats.length * showtime.price}
-          </p>
+  return (
+    <Card className="p-8 bg-primary/5 border-primary/20 rounded-[2.5rem] relative overflow-hidden shadow-2xl">
+      {/* Visual Flair */}
+      <div className="absolute top-0 right-0 p-8 opacity-[0.03] rotate-12">
+        <CreditCard className="w-48 h-48 text-primary" />
+      </div>
+
+      <div className="relative z-10 space-y-8">
+        <header className="flex items-center justify-between">
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter">
+            Finalize Pass
+          </h2>
+          <div className="flex items-center gap-2 text-primary">
+            <ShieldCheck className="w-5 h-5" />
+            <span className="text-[10px] font-mono font-bold tracking-[0.3em] uppercase">
+              Secure Pay
+            </span>
+          </div>
+        </header>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-y-4 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+            <div>Cinema</div>
+            <div className="text-right text-foreground font-bold">
+              {showtime.theaters.name}
+            </div>
+
+            <div>Schedule</div>
+            <div className="text-right text-foreground font-bold">
+              {showtime.date} @ {showtime.time}
+            </div>
+
+            <div>Seats</div>
+            <div className="text-right text-foreground font-bold">
+              {seats.join(", ")}
+            </div>
+          </div>
+
+          <div className="h-px bg-white/5 my-6" />
+
+          <div className="flex justify-between items-end">
+            <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-[0.4em]">
+              Amount Payable
+            </span>
+            <span className="text-4xl font-black italic tracking-tighter text-primary">
+              ₹{totalPrice.toLocaleString()}
+            </span>
+          </div>
         </div>
 
         <Button
+          disabled={loading || seats.length === 0}
           onClick={handleConfirmBooking}
-          className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-lg shadow-primary/20"
+          className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-lg shadow-2xl shadow-primary/20 group overflow-hidden relative"
         >
-          Pay & Confirm Booking
+          {loading ? (
+            <Loader2 className="animate-spin w-6 h-6" />
+          ) : (
+            <>
+              Authorize Payment
+              <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            </>
+          )}
         </Button>
-      </CardContent>
+      </div>
     </Card>
   );
 }

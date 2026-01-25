@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Stepper from "./components/stepper";
 import StepMovie from "./components/step-movie";
 import StepShowtime from "./components/step-showtime";
@@ -22,42 +23,67 @@ export default function BookingClient({
   const [seats, setSeats] = useState<string[]>([]);
 
   return (
-    <main className="max-w-5xl mx-auto px-6 pt-32 pb-24 space-y-10">
-      <Stepper currentStep={step} />
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 pb-20">
+      {/* Decorative Blur Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
+      </div>
 
-      <StepMovie movie={movie} />
+      <main className="relative z-10 max-w-4xl mx-auto px-6 pt-32 space-y-12">
+        <header className="space-y-4 text-center md:text-left">
+          <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">
+            Secure Your <span className="text-primary">Pass</span>
+          </h1>
+          <Stepper currentStep={step} />
+        </header>
 
-      {step === 2 && (
-        <StepShowtime
-          showtimes={showtimes}
-          onSelect={(s) => {
-            setShowtime(s);
-            setStep(3);
-          }}
-        />
-      )}
+        <section className="grid gap-8">
+          <StepMovie movie={movie} />
 
-      {step === 3 && (
-        <StepConfirm
-          movie={movie}
-          showtime={showtime}
-          onBack={() => setStep(2)}
-          onContinue={() => setStep(4)}
-        />
-      )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {step === 2 && (
+                <StepShowtime
+                  showtimes={showtimes}
+                  onSelect={(s) => {
+                    setShowtime(s);
+                    setStep(3);
+                  }}
+                />
+              )}
 
-      {step === 4 && (
-        <StepSeats
-          onConfirm={(s) => {
-            setSeats(s);
-            setStep(5);
-          }}
-        />
-      )}
+              {step === 3 && (
+                <StepConfirm
+                  movie={movie}
+                  showtime={showtime}
+                  onBack={() => setStep(2)}
+                  onContinue={() => setStep(4)}
+                />
+              )}
 
-      {step === 5 && (
-        <StepPayment movie={movie} showtime={showtime} seats={seats} />
-      )}
-    </main>
+              {step === 4 && (
+                <StepSeats
+                  onConfirm={(s) => {
+                    setSeats(s);
+                    setStep(5);
+                  }}
+                  onBack={() => setStep(3)}
+                />
+              )}
+
+              {step === 5 && (
+                <StepPayment movie={movie} showtime={showtime} seats={seats} />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </section>
+      </main>
+    </div>
   );
 }
