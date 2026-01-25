@@ -15,14 +15,26 @@ import {
   ArrowUpRight,
   MonitorPlay,
   Loader2,
-  User,
   Accessibility,
+  Clock,
+  Ticket,
+  Star,
+  ChevronRight,
+  CalendarDays,
+  Play,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 /* ───────────────── TYPES ───────────────── */
@@ -33,13 +45,7 @@ type Theater = {
   location: string;
   screen_type: "standard" | "premium" | "imax" | "4dx";
   facilities: string;
-  showtimes: {
-    movie: {
-      id: number;
-      title: string;
-      poster_path: string;
-    };
-  }[];
+  showtimes: any[];
 };
 
 export default function TheatersPage() {
@@ -48,28 +54,20 @@ export default function TheatersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedTheater, setSelectedTheater] = useState<Theater | null>(null);
 
   useEffect(() => {
     async function fetchTheaters() {
       setLoading(true);
-      // Fetch theaters with their associated movies through showtimes
       const { data, error } = await supabase.from("theaters").select(`
           *,
           showtimes (
-            movie:movies (id, title, poster_path)
+            id, time, date, price,
+            movie:movies (*)
           )
         `);
 
-      if (data) {
-        // Simple logic to remove duplicate movies from the same theater list
-        const formattedData = data.map((t: any) => {
-          const uniqueMovies = Array.from(
-            new Set(t.showtimes?.map((s: any) => s.movie?.id)),
-          ).map((id) => t.showtimes.find((s: any) => s.movie?.id === id).movie);
-          return { ...t, uniqueMovies };
-        });
-        setTheaters(formattedData);
-      }
+      if (data) setTheaters(data);
       setLoading(false);
     }
     fetchTheaters();
@@ -84,42 +82,29 @@ export default function TheatersPage() {
     return matchesSearch && matchesType;
   });
 
-  if (loading) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-black">
-        <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-        <p className="text-[10px] font-mono uppercase tracking-[0.5em] text-muted-foreground">
-          Syncing Cinemas...
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-black text-white selection:bg-primary/30">
-      {/* HERO SECTION */}
+      {/* 1. HERO SECTION ... (Keep previous hero code) */}
       <section className="relative pt-32 pb-20 px-6 border-b border-white/5 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-64 bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
+        <div className="max-w-7xl mx-auto relative z-10 text-center md:text-left">
           <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 px-4 py-1 uppercase tracking-widest text-[10px]">
-            The Digital Directory
+            Cinema Discovery
           </Badge>
           <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.8] mb-8">
-            Cinema <br /> <span className="text-primary">Network</span>
+            The <span className="text-primary">Network</span>
           </h1>
 
           <div className="flex flex-col md:flex-row gap-4 mt-12 items-center">
             <div className="relative w-full md:max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Find a theater near you..."
+                placeholder="Search by theater name..."
                 className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl focus:border-primary/50 transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
             <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
               {["all", "standard", "premium", "imax", "4dx"].map((type) => (
                 <Button
@@ -141,126 +126,160 @@ export default function TheatersPage() {
         </div>
       </section>
 
-      {/* MAIN GRID */}
+      {/* 2. THEATERS LIST */}
       <main className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredTheaters.map((theater) => (
-              <motion.div
-                key={theater.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-              >
-                <Card className="group bg-zinc-950 border-white/5 rounded-[2.5rem] overflow-hidden hover:border-primary/30 transition-all duration-500">
-                  <CardContent className="p-0">
-                    <div className="flex flex-col md:flex-row">
-                      {/* THEATER DETAILS */}
-                      <div className="p-8 flex-1 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/5">
-                        <div className="space-y-6">
-                          <div className="flex justify-between items-start">
-                            <Badge className="bg-white/5 text-white/60 font-mono text-[9px] border-none uppercase tracking-widest">
-                              {theater.screen_type}
-                            </Badge>
-                            <FacilityIcons list={theater.facilities} />
-                          </div>
-
-                          <div>
-                            <h3 className="text-3xl font-black italic uppercase tracking-tighter group-hover:text-primary transition-colors">
-                              {theater.name}
-                            </h3>
-                            <p className="text-muted-foreground text-xs flex items-center gap-2 mt-2 font-medium">
-                              <MapPin className="w-3 h-3 text-primary" />{" "}
-                              {theater.location}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-12">
-                          <Button className="w-full h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest group-hover:bg-primary transition-all">
-                            View Schedule{" "}
-                            <ArrowUpRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* NOW SHOWING AT THIS THEATER */}
-                      <div className="p-8 w-full md:w-[45%] bg-white/[0.02]">
-                        <p className="text-[10px] font-mono text-primary uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
-                          <MonitorPlay className="w-3 h-3" /> Now Showing
-                        </p>
-
-                        <div className="space-y-4">
-                          {(theater as any).uniqueMovies?.length > 0 ? (
-                            (theater as any).uniqueMovies
-                              .slice(0, 3)
-                              .map((movie: any) => (
-                                <div
-                                  key={movie.id}
-                                  className="flex items-center gap-4 group/movie"
-                                >
-                                  <div className="relative w-12 h-16 bg-zinc-900 rounded-lg overflow-hidden shrink-0 border border-white/5">
-                                    <Image
-                                      src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
-                                      alt={movie.title}
-                                      fill
-                                      sizes="48px"
-                                      className="object-cover grayscale group-hover/movie:grayscale-0 transition-all"
-                                    />
-                                  </div>
-                                  <div className="overflow-hidden">
-                                    <p className="text-xs font-bold uppercase tracking-tight truncate text-white/80">
-                                      {movie.title}
-                                    </p>
-                                    <Link
-                                      href={`/bookings/${movie.id}`}
-                                      className="text-[9px] font-black text-primary uppercase hover:underline underline-offset-4 mt-1 block"
-                                    >
-                                      Get Tickets
-                                    </Link>
-                                  </div>
-                                </div>
-                              ))
-                          ) : (
-                            <p className="text-[10px] italic text-muted-foreground uppercase py-10">
-                              No sessions scheduled
-                            </p>
-                          )}
-                        </div>
-                      </div>
+          {filteredTheaters.map((theater) => (
+            <Card
+              key={theater.id}
+              className="group bg-zinc-950 border-white/5 rounded-[2.5rem] overflow-hidden hover:border-primary/30 transition-all duration-500"
+            >
+              <CardContent className="p-0 flex flex-col md:flex-row">
+                <div className="p-8 flex-1 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/5">
+                  <div className="space-y-6">
+                    <Badge className="bg-white/5 text-white/60 font-mono text-[9px] border-none uppercase tracking-widest">
+                      {theater.screen_type}
+                    </Badge>
+                    <div>
+                      <h3 className="text-3xl font-black italic uppercase tracking-tighter group-hover:text-primary transition-colors">
+                        {theater.name}
+                      </h3>
+                      <p className="text-muted-foreground text-xs flex items-center gap-2 mt-2 font-medium">
+                        <MapPin className="w-3 h-3 text-primary" />{" "}
+                        {theater.location}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                  </div>
+                  <Button
+                    onClick={() => setSelectedTheater(theater)}
+                    className="mt-8 w-full h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all"
+                  >
+                    View Schedule <ArrowUpRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+                <div className="p-8 w-full md:w-[45%] bg-white/[0.02] flex items-center justify-center">
+                  <div className="text-center space-y-2">
+                    <p className="text-2xl font-black italic text-white/20 uppercase tracking-tighter">
+                      Quick<span className="text-primary/20">Show</span>
+                    </p>
+                    <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/40">
+                      {theater.showtimes?.length || 0} active sessions
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </main>
+
+      {/* 3. SCHEDULE SHEET WITH BOOKING BUTTON */}
+      <Sheet
+        open={!!selectedTheater}
+        onOpenChange={() => setSelectedTheater(null)}
+      >
+        <SheetContent className="w-full sm:max-w-xl bg-zinc-950 border-white/5 p-0 overflow-y-auto">
+          <SheetHeader className="p-8 bg-secondary/10 border-b border-white/5">
+            <Badge className="bg-primary/20 text-primary border-none uppercase tracking-widest text-[9px] w-fit mb-2">
+              {selectedTheater?.screen_type}
+            </Badge>
+            <SheetTitle className="text-4xl font-black italic uppercase tracking-tighter text-white">
+              {selectedTheater?.name}
+            </SheetTitle>
+            <SheetDescription className="text-muted-foreground font-mono text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+              <MapPin className="w-3 h-3 text-primary" />{" "}
+              {selectedTheater?.location}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="p-8 space-y-12">
+            {selectedTheater?.showtimes &&
+            selectedTheater.showtimes.length > 0 ? (
+              Object.entries(
+                selectedTheater.showtimes.reduce((acc: any, curr: any) => {
+                  const movieTitle = curr.movie.title;
+                  if (!acc[movieTitle])
+                    acc[movieTitle] = { movie: curr.movie, sessions: [] };
+                  acc[movieTitle].sessions.push(curr);
+                  return acc;
+                }, {}),
+              ).map(([title, data]: any) => (
+                <div
+                  key={title}
+                  className="group flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-500"
+                >
+                  <div className="flex gap-6 items-start">
+                    {/* Poster */}
+                    <div className="relative w-28 h-40 shrink-0 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w300${data.movie.poster_path}`}
+                        alt={title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                          <span className="text-[10px] font-bold text-white/80">
+                            {data.movie.vote_average.toFixed(1)} Rating
+                          </span>
+                        </div>
+                        <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-none text-white group-hover:text-primary transition-colors">
+                          {title}
+                        </h4>
+                      </div>
+
+                      {/* Sessions Preview */}
+                      <div className="flex flex-wrap gap-2">
+                        {data.sessions.slice(0, 3).map((st: any) => (
+                          <div
+                            key={st.id}
+                            className="px-3 py-1.5 bg-white/5 rounded-lg border border-white/10 flex flex-col items-center"
+                          >
+                            <span className="text-[10px] font-black italic text-white/60">
+                              {st.time.slice(0, 5)}
+                            </span>
+                          </div>
+                        ))}
+                        {data.sessions.length > 3 && (
+                          <div className="px-3 py-1.5 bg-white/5 rounded-lg border border-white/10 flex items-center">
+                            <span className="text-[8px] font-black uppercase text-muted-foreground">
+                              +{data.sessions.length - 3} More
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* PRIMARY BOOKING BUTTON */}
+                      <Link href={`/bookings/${data.movie.id}`}>
+                        <Button className="w-full mt-2 h-11 rounded-xl font-black uppercase text-[10px] tracking-widest gap-2 group-hover:bg-primary transition-all">
+                          <Ticket className="w-4 h-4" /> Get Tickets
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                  <Separator className="bg-white/5" />
+                </div>
+              ))
+            ) : (
+              <div className="py-20 text-center opacity-20">
+                <CalendarDays className="w-12 h-12 mx-auto mb-4" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  No sessions currently active
+                </p>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
 
-function FacilityIcons({ list }: { list: string }) {
-  const icons: any = {
-    parking: <ParkingCircle className="w-3.5 h-3.5" />,
-    snacks: <Coffee className="w-3.5 h-3.5" />,
-    wifi: <Wifi className="w-3.5 h-3.5" />,
-    wheelchair: <Accessibility className="w-3.5 h-3.5" />,
-    standard: <Tv className="w-3.5 h-3.5" />,
-  };
-
-  return (
-    <div className="flex gap-2">
-      {list.split(",").map((f) => (
-        <div
-          key={f}
-          className="text-muted-foreground/40 hover:text-primary transition-colors"
-          title={f}
-        >
-          {icons[f.trim().toLowerCase()] || <Tv className="w-3.5 h-3.5" />}
-        </div>
-      ))}
-    </div>
-  );
+function Separator({ className }: { className?: string }) {
+  return <div className={cn("h-px w-full", className)} />;
 }
