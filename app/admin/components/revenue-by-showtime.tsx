@@ -1,25 +1,36 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+"use client";
+
+import { useMemo } from "react";
 
 export default function RevenueByShowtime({ bookings }: { bookings: any[] }) {
-  const map: Record<string, number> = {};
-
-  bookings.forEach((b) => {
-    const t = b.showtimes?.time;
-    if (!t) return;
-    map[t] = (map[t] || 0) + b.total_amount;
-  });
+  const timeMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    bookings.forEach((b) => {
+      const t = b.show_time; // Correct column name
+      if (!t) return;
+      // Slice HH:MM if it includes seconds
+      const formattedTime = t.slice(0, 5);
+      map[formattedTime] =
+        (map[formattedTime] || 0) + (Number(b.total_amount) || 0);
+    });
+    return Object.entries(map).sort();
+  }, [bookings]);
 
   return (
-    <Card className="rounded-lg">
-      <CardHeader className="font-medium">Revenue by Showtime</CardHeader>
-      <CardContent className="space-y-2 text-sm">
-        {Object.entries(map).map(([t, r]) => (
-          <div key={t} className="flex justify-between">
-            <span>{t}</span>
-            <span className="font-mono text-primary">₹{r}</span>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {timeMap.map(([time, revenue]) => (
+        <div
+          key={time}
+          className="flex justify-between items-center p-3 rounded-xl bg-white/[0.02] border border-white/5"
+        >
+          <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">
+            {time} Slot
+          </span>
+          <span className="text-sm font-black italic text-primary">
+            ₹{revenue.toLocaleString()}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }

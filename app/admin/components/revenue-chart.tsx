@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -7,28 +8,68 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function RevenueChart({ bookings }: { bookings: any[] }) {
-  const data = bookings.map((b) => ({
-    date: new Date(b.booking_date).toLocaleDateString(),
-    revenue: b.total_amount,
-  }));
+  const chartData = useMemo(() => {
+    const dailyMap: Record<string, number> = {};
+
+    bookings.forEach((b) => {
+      const date = new Date(b.created_at).toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+      });
+
+      const amount = Number(b.total_amount) || 0;
+      dailyMap[date] = (dailyMap[date] || 0) + amount;
+    });
+
+    return Object.entries(dailyMap).map(([date, revenue]) => ({
+      date,
+      revenue,
+    }));
+  }, [bookings]);
 
   return (
-    <Card className="rounded-lg">
-      <CardHeader className="font-medium">Revenue Trend</CardHeader>
-      <CardContent className="h-[260px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis dataKey="date" fontSize={11} />
-            <YAxis fontSize={11} />
-            <Tooltip />
-            <Bar dataKey="revenue" fill="hsl(var(--primary))" />
-          </BarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+    <div className="h-[300px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#ffffff05"
+          />
+          <XAxis
+            dataKey="date"
+            fontSize={10}
+            tick={{ fill: "#666" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            fontSize={10}
+            tick={{ fill: "#666" }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v) => `₹${v}`}
+          />
+          <Tooltip
+            cursor={{ fill: "#ffffff05" }}
+            contentStyle={{
+              backgroundColor: "#000",
+              border: "1px solid #333",
+              borderRadius: "8px",
+            }}
+          />
+          <Bar
+            dataKey="revenue"
+            fill="hsl(var(--primary))"
+            radius={[4, 4, 0, 0]}
+            barSize={40}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
