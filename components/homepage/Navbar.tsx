@@ -273,5 +273,4 @@ const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Movies", href: "/movies" },
   { label: "Theaters", href: "/theaters" },
-  { label: "Bookings", href: "/bookings" },
 ];
