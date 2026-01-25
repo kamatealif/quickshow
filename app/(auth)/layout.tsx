@@ -3,8 +3,6 @@ import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
 
 import { ThemeProvider } from "@/components/homepage/theme-provider";
 import "@/app/globals.css";
-import Navbar from "@/components/homepage/Navbar";
-import Footer from "@/components/homepage/footer";
 import { Toaster } from "@/components/ui/sonner";
 
 const notoSans = Noto_Sans({ variable: "--font-sans" });
@@ -20,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QuickShow - Book the Tickets, Quick and Easy",
+  title: "QuickShow - sing-in",
   description:
     "Your go-to platform for hassle-free movie ticket booking. Experience the joy of seamless reservations and never miss out on your favorite films again!",
 };
@@ -41,9 +39,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
           {children}
-          <Footer />
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>

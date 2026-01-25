@@ -4,6 +4,7 @@ import TrendingRow from "@/components/homepage/TrendingRow";
 import MovieCard from "@/components/movies/movie-card";
 import WhyQuickShow from "@/components/homepage/WhyQuickShow";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
 
 // TMDB helpers
 const tmdbBackdrop = (path: string | null) =>
@@ -102,6 +103,10 @@ export default async function HomePage() {
       poster_path: tmdbPoster(m.poster_path),
       vote_average: Number(m.vote_average ?? 0),
     })) ?? [];
+
+  // Note: This is a server component, so you'll need to either:
+  // 1. Convert the button to a client component, OR
+  // 2. Use a different toast library that works with server components
 
   /* ───────────────────────── RENDER ───────────────────────── */
 
