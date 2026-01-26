@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import AdminSidebar from "./components/admin-sidebar"; // Import the new component
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function AdminLayout({
   children,
@@ -23,13 +24,16 @@ export default async function AdminLayout({
   if (!profile?.is_admin) redirect("/");
 
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-primary/30">
-      <AdminSidebar />
+    <>
+      <Toaster position="top-right" richColors closeButton />
+      <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-primary/30">
+        <AdminSidebar />
 
-      <main className="flex-1 relative transition-all duration-500">
-        <div className="absolute top-0 left-0 w-full h-64 bg-primary/5 blur-[120px] pointer-events-none" />
-        <div className="relative p-12 max-w-7xl mx-auto">{children}</div>
-      </main>
-    </div>
+        <main className="flex-1 relative transition-all duration-500">
+          <div className="absolute top-0 left-0 w-full h-64 bg-primary/5 blur-[120px] pointer-events-none" />
+          <div className="relative p-12 max-w-7xl mx-auto">{children}</div>
+        </main>
+      </div>
+    </>
   );
 }
