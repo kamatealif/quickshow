@@ -1,3 +1,4 @@
+// app/admin/bookings/bookings-table.tsx
 "use client";
 
 import {
@@ -8,90 +9,79 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Database, User, Film, MapPin, IndianRupee, Clock } from "lucide-react";
 
-export default function BookingsTable({ bookings }: { bookings: any[] }) {
+export default function BookingsTable({ bookings = [] }: { bookings: any[] }) {
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="bg-zinc-950/40 border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl backdrop-blur-3xl">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User</TableHead>
-            <TableHead>Movie</TableHead>
-            <TableHead>Seats</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Payment</TableHead>
+        <TableHeader className="bg-white/[0.03]">
+          <TableRow className="border-white/5 hover:bg-transparent text-zinc-500">
+            <TableHead className="py-10 px-12 text-[10px] font-bold uppercase tracking-[0.4em]">
+              Transaction Hash
+            </TableHead>
+            <TableHead className="text-[10px] font-bold uppercase tracking-[0.4em]">
+              Media Asset
+            </TableHead>
+            <TableHead className="text-[10px] font-bold uppercase tracking-[0.4em]">
+              Deployment Info
+            </TableHead>
+            <TableHead className="text-right px-12 text-[10px] font-bold uppercase tracking-[0.4em]">
+              Settlement
+            </TableHead>
           </TableRow>
         </TableHeader>
-
         <TableBody>
           {bookings.map((b) => (
-            <TableRow key={b.id}>
-              {/* User */}
-              <TableCell>
-                <div className="text-sm font-medium">
-                  {b.profiles?.email ?? "—"}
+            <TableRow
+              key={b.id}
+              className="border-white/5 hover:bg-white/[0.02] transition-all group"
+            >
+              <TableCell className="py-12 px-12">
+                <div className="flex items-center gap-4 text-zinc-600 group-hover:text-zinc-400 transition-colors">
+                  <Database className="w-4 h-4" />
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-tight italic">
+                    {b.id}
+                  </span>
                 </div>
-                <div className="text-[10px] text-muted-foreground font-mono">
-                  REF-{b.id.slice(0, 8)}
+              </TableCell>
+
+              <TableCell>
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-all">
+                    {b.movie_title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
+                    <User className="w-3.5 h-3.5 text-primary/40" />
+                    {b.profiles?.email || "EXTERNAL_GUEST"}
+                  </div>
                 </div>
               </TableCell>
 
-              {/* Movie */}
-              <TableCell className="text-sm">
-                {b.showtimes?.movies?.title ?? "—"}
-              </TableCell>
-
-              {/* Seats */}
-              <TableCell className="text-sm font-mono">
-                {Array.isArray(b.seats) ? b.seats.join(", ") : b.seats}
-              </TableCell>
-
-              {/* Amount */}
-              <TableCell className="font-mono text-sm font-semibold">
-                ₹{b.total_amount.toLocaleString()}
-              </TableCell>
-
-              {/* Status */}
               <TableCell>
-                <Badge
-                  variant="outline"
-                  className={`rounded-sm text-[10px] uppercase ${
-                    b.status === "confirmed"
-                      ? "border-emerald-500/50 text-emerald-500"
-                      : "border-orange-500/50 text-orange-500"
-                  }`}
-                >
-                  {b.status}
-                </Badge>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-mono text-zinc-300 font-bold uppercase">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    {b.theater_name}
+                  </div>
+                  <div className="flex items-center gap-4 text-[10px] font-black uppercase text-zinc-500">
+                    <Clock className="w-3.5 h-3.5" /> {b.show_date} @{" "}
+                    {b.show_time.slice(0, 5)} HRS •{" "}
+                    <span className="text-primary/60">SEATS: {b.seats}</span>
+                  </div>
+                </div>
               </TableCell>
 
-              {/* Payment */}
-              <TableCell className="text-right">
-                <span
-                  className={`text-xs font-medium ${
-                    b.payment_status === "paid"
-                      ? "text-emerald-500"
-                      : "text-rose-500"
-                  }`}
-                >
-                  {b.payment_status === "paid" ? "Paid" : "Pending"}
-                </span>
+              <TableCell className="text-right px-12">
+                <div className="flex items-center justify-end gap-2 text-white">
+                  <IndianRupee className="w-5 h-5 text-primary" />
+                  <span className="text-3xl font-black italic tracking-tighter font-mono">
+                    {Number(b.total_amount).toFixed(2)}
+                  </span>
+                </div>
               </TableCell>
             </TableRow>
           ))}
-
-          {bookings.length === 0 && (
-            <TableRow>
-              <TableCell
-                colSpan={6}
-                className="text-center py-10 text-muted-foreground"
-              >
-                No bookings found
-              </TableCell>
-            </TableRow>
-          )}
         </TableBody>
       </Table>
     </div>

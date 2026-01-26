@@ -1,3 +1,4 @@
+// app/admin/showtimes/create-showtime-dialog.tsx
 "use client";
 
 import {
@@ -10,28 +11,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useState } from "react";
-import CreateTheaterForm from "./theater-form";
+import ShowtimeForm from "./showtime-form";
 
-export default function CreateTheaterDialog() {
+export default function CreateShowtimeDialog({
+  theaters,
+}: {
+  theaters: any[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="h-12 bg-primary text-primary-foreground font-black uppercase italic tracking-tight rounded-md">
-          Add Theater
+          Add Showtime
           <PlusCircle className="ml-2 h-4 w-4" />
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-3xl bg-card/80 backdrop-blur-xl border-white/10 rounded-xl">
+      <DialogContent className="max-w-4xl bg-zinc-950/80 backdrop-blur-xl border-white/10 rounded-xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            Add New Theater
+          <DialogTitle className="text-xl font-semibold uppercase italic tracking-tighter">
+            Register New Sessions
           </DialogTitle>
         </DialogHeader>
 
-        <CreateTheaterForm onSuccess={() => setOpen(false)} />
+        <ShowtimeForm theaters={theaters} onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );
