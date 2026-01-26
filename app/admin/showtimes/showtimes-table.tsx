@@ -2,7 +2,8 @@
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,170 +21,170 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  MoreHorizontal,
+  CheckCircle,
+  XCircle,
+  Trash2,
+  Clock,
+  CalendarIcon,
+  TrendingUp,
+} from "lucide-react";
 
-import { MoreHorizontal, CheckCircle, XCircle, Trash2 } from "lucide-react";
-
-type Showtime = {
-  id: string;
-  date: string;
-  time: string;
-  price: number;
-  available_seats: number;
-  total_seats: number;
-  status: "active" | "cancelled" | "full";
-  movies: {
-    id: number;
-    title: string;
-  } | null;
-};
-
-export default function ShowtimesTable({
-  showtimes,
-}: {
-  showtimes: Showtime[];
-}) {
+export default function ShowtimesTable({ showtimes }: { showtimes: any[] }) {
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
 
-  async function updateStatus(showtimeId: string, status: Showtime["status"]) {
+  async function updateStatus(id: string, status: string) {
     const { error } = await supabase
       .from("showtimes")
       .update({ status })
-      .eq("id", showtimeId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(`SYSTEM: Status set to ${status.toUpperCase()}`);
     router.refresh();
   }
 
-  async function deleteShowtime(showtimeId: string) {
-    const confirm = window.confirm(
-      "Are you sure you want to delete this showtime? This action cannot be undone.",
-    );
-
-    if (!confirm) return;
-
-    const { error } = await supabase
-      .from("showtimes")
-      .delete()
-      .eq("id", showtimeId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
+  async function deleteShowtime(id: string) {
+    if (!window.confirm("PURGE REQUEST: Confirm permanent deletion?")) return;
+    const { error } = await supabase.from("showtimes").delete().eq("id", id);
+    if (error) return toast.error("ACCESS DENIED: Delete Failed");
+    toast.success("SYSTEM: Record Purged");
     router.refresh();
   }
 
   return (
-    <div className="border border-white/10 rounded-lg overflow-hidden">
+    <div className="bg-[#0a0a0a] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-white/5">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Movie</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>Seats</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+        <TableHeader className="bg-white/[0.02]">
+          <TableRow className="border-white/5 hover:bg-transparent">
+            <TableHead className="text-[10px] uppercase font-black tracking-[0.3em] py-8 px-10 text-zinc-500">
+              Asset Identity
+            </TableHead>
+            <TableHead className="text-[10px] uppercase font-black tracking-[0.3em] text-zinc-500">
+              Timeframe
+            </TableHead>
+            <TableHead className="text-[10px] uppercase font-black tracking-[0.3em] text-zinc-500 text-center">
+              Load Factor
+            </TableHead>
+            <TableHead className="text-[10px] uppercase font-black tracking-[0.3em] text-zinc-500">
+              Commercial
+            </TableHead>
+            <TableHead className="text-[10px] uppercase font-black tracking-[0.3em] text-zinc-500 text-right px-10">
+              Operations
+            </TableHead>
           </TableRow>
         </TableHeader>
-
         <TableBody>
           {showtimes.map((s) => (
-            <TableRow key={s.id}>
-              {/* Movie */}
-              <TableCell className="font-medium">
-                {s.movies?.title ?? "—"}
+            <TableRow
+              key={s.id}
+              className="border-white/5 hover:bg-white/[0.01] transition-colors group"
+            >
+              <TableCell className="py-10 px-10">
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-base font-black text-white uppercase tracking-tight group-hover:text-primary transition-colors">
+                    {s.movies?.title ?? "NODE_EMPTY"}
+                  </p>
+                  <code className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest bg-white/5 w-fit px-2 py-0.5 rounded">
+                    REF_{s.id.slice(0, 6)}
+                  </code>
+                </div>
               </TableCell>
-
-              {/* Date */}
-              <TableCell>{s.date}</TableCell>
-
-              {/* Time */}
-              <TableCell>{s.time}</TableCell>
-
-              {/* Seats */}
               <TableCell>
-                {s.available_seats}/{s.total_seats}
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-2">
+                    <CalendarIcon className="w-3 h-3 text-primary/50" />{" "}
+                    {s.date}
+                  </span>
+                  <span className="text-[12px] font-mono text-white font-black flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-primary" />{" "}
+                    {s.time.slice(0, 5)} HRS
+                  </span>
+                </div>
               </TableCell>
-
-              {/* Price */}
-              <TableCell>₹{s.price}</TableCell>
-
-              {/* Status */}
               <TableCell>
-                <Badge
-                  variant={
-                    s.status === "active"
-                      ? "default"
-                      : s.status === "cancelled"
-                        ? "destructive"
-                        : "secondary"
-                  }
-                >
-                  {s.status}
-                </Badge>
+                <div className="mx-auto w-32 space-y-2.5">
+                  <div className="flex justify-between text-[10px] font-mono uppercase text-zinc-500 font-black">
+                    <TrendingUp className="w-3 h-3" />
+                    <span>
+                      {Math.round(
+                        ((s.total_seats - s.available_seats) / s.total_seats) *
+                          100,
+                      )}
+                      %
+                    </span>
+                  </div>
+                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-700 ease-in-out"
+                      style={{
+                        width: `${((s.total_seats - s.available_seats) / s.total_seats) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
               </TableCell>
-
-              {/* Actions Menu */}
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent align="end" className="w-44">
-                    {s.status !== "active" && (
-                      <DropdownMenuItem
-                        onClick={() => updateStatus(s.id, "active")}
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Activate
-                      </DropdownMenuItem>
+              <TableCell>
+                <span className="text-lg font-black italic text-primary font-mono tracking-tighter">
+                  ₹{s.price}
+                </span>
+              </TableCell>
+              <TableCell className="text-right px-10">
+                <div className="flex items-center justify-end gap-6">
+                  <Badge
+                    className={cn(
+                      "text-[10px] uppercase tracking-widest px-4 py-1.5 border-none font-black rounded-lg",
+                      s.status === "active"
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : "bg-rose-500/10 text-rose-500",
                     )}
-
-                    {s.status === "active" && (
-                      <DropdownMenuItem
-                        onClick={() => updateStatus(s.id, "cancelled")}
+                  >
+                    {s.status}
+                  </Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-12 w-12 hover:bg-white/5 rounded-2xl transition-all"
                       >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Cancel
-                      </DropdownMenuItem>
-                    )}
-
-                    <DropdownMenuSeparator />
-
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => deleteShowtime(s.id)}
+                        <MoreHorizontal className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-[#0d0d0d] border-white/5 p-2 min-w-[180px] rounded-2xl shadow-3xl ring-1 ring-white/10"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem
+                        className="py-3 px-4 rounded-xl cursor-pointer text-[11px] font-bold uppercase tracking-widest focus:bg-primary focus:text-black"
+                        onClick={() =>
+                          updateStatus(
+                            s.id,
+                            s.status === "active" ? "cancelled" : "active",
+                          )
+                        }
+                      >
+                        {s.status === "active" ? (
+                          <XCircle className="w-4 h-4 mr-3" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 mr-3" />
+                        )}
+                        Toggle Ops
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-white/5 my-2" />
+                      <DropdownMenuItem
+                        className="text-rose-500 focus:bg-rose-500 focus:text-white py-3 px-4 rounded-xl cursor-pointer text-[11px] font-bold uppercase tracking-widest"
+                        onClick={() => deleteShowtime(s.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-3" /> Purge Entry
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </TableCell>
             </TableRow>
           ))}
-
-          {showtimes.length === 0 && (
-            <TableRow>
-              <TableCell
-                colSpan={7}
-                className="text-center py-8 text-muted-foreground"
-              >
-                No showtimes created yet
-              </TableCell>
-            </TableRow>
-          )}
         </TableBody>
       </Table>
     </div>
