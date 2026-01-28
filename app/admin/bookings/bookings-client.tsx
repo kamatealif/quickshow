@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Database, Film, Loader2, X } from "lucide-react";
+import { Database, Film, Loader2, X } from "lucide-react";
 import BookingsTable from "./bookings-table";
 
 type Booking = {
@@ -28,15 +28,17 @@ export default function BookingsClient({
   // Simulation of registry scanning for user feedback
   useEffect(() => {
     if (search) {
-      setIsScanning(true);
-      const timeout = setTimeout(() => setIsScanning(false), 400);
-      return () => clearTimeout(timeout);
+      const startTimeout = setTimeout(() => setIsScanning(true), 0);
+      const stopTimeout = setTimeout(() => setIsScanning(false), 400);
+      return () => {
+        clearTimeout(startTimeout);
+        clearTimeout(stopTimeout);
+      };
     }
   }, [search]);
 
-  const safeBookings = Array.isArray(bookings) ? bookings : [];
-
   const filteredBookings = useMemo(() => {
+    const safeBookings = Array.isArray(bookings) ? bookings : [];
     if (!search.trim()) return safeBookings;
     const q = search.toLowerCase().trim();
 
@@ -47,7 +49,7 @@ export default function BookingsClient({
 
       return email.includes(q) || movie.includes(q) || ref.includes(q);
     });
-  }, [safeBookings, search]);
+  }, [bookings, search]);
 
   return (
     <div className="space-y-10">
@@ -76,7 +78,7 @@ export default function BookingsClient({
         <div className="relative w-full md:w-96 group">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-40 group-focus-within:opacity-100 transition-all duration-300">
             <Database className="h-3 w-3 text-primary" />
-            <div className="h-3 w-[1px] bg-white/10" />
+            <div className="h-3 w-px bg-white/10" />
             <Film className="h-3 w-3 text-primary" />
           </div>
 
@@ -84,7 +86,7 @@ export default function BookingsClient({
             placeholder="Search by Email, Movie or ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-14 pl-16 pr-12 bg-white/[0.03] border-white/10 rounded-2xl focus:border-primary/50 transition-all text-sm placeholder:text-zinc-700 placeholder:font-mono focus:bg-white/[0.05]"
+            className="h-14 pl-16 pr-12 bg-white/3 border-white/10 rounded-2xl focus:border-primary/50 transition-all text-sm placeholder:text-zinc-700 placeholder:font-mono focus:bg-white/5"
           />
 
           {search && (

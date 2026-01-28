@@ -31,10 +31,11 @@ export default function StepSeats({
   const [occupied, setOccupied] = useState<Set<string>>(new Set());
   const [fetching, setFetching] = useState(false);
 
+
+
   useEffect(() => {
-    // 🔒 HARD EXIT
+    // Only fetch if both movie and showtime are present
     if (!movie || !showtime) {
-      setOccupied(new Set());
       return;
     }
 

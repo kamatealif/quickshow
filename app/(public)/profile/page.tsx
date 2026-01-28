@@ -19,7 +19,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -37,10 +36,8 @@ import {
   AtSign,
   Settings2,
   History,
-  Clock,
   Trash2,
   AlertTriangle,
-  Receipt,
 } from "lucide-react";
 
 import LogoutButton from "./logout-button";
@@ -181,7 +178,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-primary/5 blur-[120px] rounded-full" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-125 bg-primary/5 blur-[120px] rounded-full" />
       </div>
 
       <main className="relative z-10 mx-auto w-full max-w-6xl px-4 py-12 md:py-24">
@@ -333,7 +330,7 @@ export default function ProfilePage() {
                           : "bg-secondary/10 hover:bg-secondary/20 shadow-lg",
                       )}
                     >
-                      <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-5 h-10 bg-background rounded-full border border-white/5" />
+                      <div className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-10 bg-background rounded-full border border-white/5" />
                       <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
                         <div className="flex-1 w-full space-y-4">
                           <p
@@ -508,7 +505,15 @@ export default function ProfilePage() {
 
 /* ───────────────── SUBCOMPONENTS ───────────────── */
 
-function ProfileInput({ label, icon: Icon, value, onChange, disabled }: any) {
+type ProfileInputProps = {
+  label: string;
+  icon: React.ElementType;
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+};
+
+function ProfileInput({ label, icon: Icon, value, onChange, disabled }: ProfileInputProps) {
   return (
     <div className="space-y-1.5">
       <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 ml-1">
@@ -524,7 +529,13 @@ function ProfileInput({ label, icon: Icon, value, onChange, disabled }: any) {
   );
 }
 
-function TicketMeta({ icon: Icon, label, value }: any) {
+type TicketMetaProps = {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+};
+
+function TicketMeta({ icon: Icon, label, value }: TicketMetaProps) {
   return (
     <div className="space-y-1">
       <p className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-tighter flex items-center gap-1">

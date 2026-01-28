@@ -42,10 +42,30 @@ export default async function AdminBookingsPage() {
     );
   }
 
+  // Define a type for the booking object
+  type Booking = {
+    id: string;
+    created_at: string;
+    movie_title: string;
+    show_date: string;
+    show_time: string;
+    seats: string;
+    theater_name: string;
+    total_amount: number;
+    profiles: { email: string }[]; // as returned by Supabase join
+  };
+
+  // Map bookings to match the Booking type (flatten profiles array to single object)
+  const normalizedBookings =
+    bookings?.map((booking: Booking) => ({
+      ...booking,
+      profiles: booking.profiles?.[0] || {},
+    })) ?? [];
+
   return (
     <div className="min-h-screen  text-zinc-100">
-      <div className="max-w-[1440px] mx-auto px-8 py-16 animate-in fade-in duration-1000">
-        <BookingsClient bookings={bookings ?? []} />
+      <div className="max-w-360 mx-auto px-8 py-16 animate-in fade-in duration-1000">
+        <BookingsClient bookings={normalizedBookings} />
       </div>
     </div>
   );
