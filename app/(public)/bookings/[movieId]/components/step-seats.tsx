@@ -11,14 +11,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 const rows = ["A", "B", "C", "D", "E"];
 const cols = [1, 2, 3, 4, 5, 6, 7, 8];
 
-type Movie = {
-  title: string;
-};
-
-type Showtime = {
-  date: string;
-  time: string;
-};
+type Movie = { title: string };
+type Showtime = { date: string; time: string };
 
 export default function StepSeats({
   movie,
@@ -38,11 +32,16 @@ export default function StepSeats({
   const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
-    // 🔒 HARD CONTRACT GUARD
+    // 🔒 HARD EXIT
     if (!movie || !showtime) {
       setOccupied(new Set());
       return;
     }
+
+    // 🔐 CAPTURE NON-OPTIONAL VALUES
+    const movieTitle = movie.title;
+    const showDate = showtime.date;
+    const showTime = showtime.time;
 
     let cancelled = false;
 
@@ -52,9 +51,9 @@ export default function StepSeats({
       const { data, error } = await supabase
         .from("bookings")
         .select("seats")
-        .eq("movie_title", movie.title)
-        .eq("show_date", showtime.date)
-        .eq("show_time", showtime.time);
+        .eq("movie_title", movieTitle)
+        .eq("show_date", showDate)
+        .eq("show_time", showTime);
 
       if (cancelled) return;
 
