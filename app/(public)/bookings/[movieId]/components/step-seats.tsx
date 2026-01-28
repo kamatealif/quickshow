@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Armchair, ChevronLeft, Loader2 } from "lucide-react";
@@ -11,26 +11,35 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 const rows = ["A", "B", "C", "D", "E"];
 const cols = [1, 2, 3, 4, 5, 6, 7, 8];
 
+type Movie = {
+  title: string;
+};
+
+type Showtime = {
+  date: string;
+  time: string;
+};
+
 export default function StepSeats({
   movie,
   showtime,
   onConfirm,
   onBack,
 }: {
-  movie?: { title: string };
-  showtime?: { date: string; time: string };
+  movie?: Movie;
+  showtime?: Showtime;
   onConfirm: (seats: string[]) => void;
   onBack: () => void;
 }) {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const [selected, setSelected] = useState<string[]>([]);
   const [occupied, setOccupied] = useState<Set<string>>(new Set());
   const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
-    // ✅ HARD GUARD — prevents crash
-    if (!movie?.title || !showtime?.date || !showtime?.time) {
+    // 🔒 HARD CONTRACT GUARD
+    if (!movie || !showtime) {
       setOccupied(new Set());
       return;
     }
@@ -57,12 +66,14 @@ export default function StepSeats({
 
       const seatSet = new Set<string>();
 
-      data?.forEach((b) => {
-        b.seats
+      data?.forEach((row) => {
+        if (typeof row.seats !== "string") return;
+
+        row.seats
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean)
-          .forEach((s) => seatSet.add(s));
+          .forEach((seat) => seatSet.add(seat));
       });
 
       setOccupied(seatSet);
@@ -74,7 +85,7 @@ export default function StepSeats({
     return () => {
       cancelled = true;
     };
-  }, [movie?.title, showtime?.date, showtime?.time, supabase]);
+  }, [movie, showtime, supabase]);
 
   const toggleSeat = (seatId: string) => {
     if (occupied.has(seatId)) return;
