@@ -6,13 +6,13 @@ export default async function AuthCallbackPage({
 }: {
   searchParams: { code?: string };
 }) {
-  const supabase = createSupabaseServerClient();
-
   const code = searchParams.code;
 
   if (!code) {
-    redirect("/sign-in");
+    redirect("/login");
   }
+
+  const supabase = await createSupabaseServerClient(); // ✅ THIS IS THE FIX
 
   await supabase.auth.exchangeCodeForSession(code);
 
