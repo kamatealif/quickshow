@@ -205,12 +205,13 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center">
                   <ProfileAvatar
                     uid={userId!}
-                    url={profile?.avatar_url}
+                    url={profile?.avatar_url ?? null}
                     name={profile?.full_name || "User"}
                     onUpload={(url) =>
                       setProfile((p) => (p ? { ...p, avatar_url: url } : p))
                     }
                   />
+
                   <CardTitle className="mt-6 text-2xl font-black uppercase italic tracking-tight">
                     {profile?.full_name || "Guest Member"}
                   </CardTitle>
