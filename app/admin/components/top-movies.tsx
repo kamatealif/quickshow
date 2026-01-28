@@ -1,9 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { Progress } from "@/components/ui/badge"; // or custom bar
+// import { Progress } from "@/components/ui/badge"; // or custom bar
 
-export default function TopMovies({ bookings }: { bookings: any[] }) {
+interface Booking {
+  movie_title: string;
+  total_amount: string | number;
+}
+
+export default function TopMovies({ bookings }: { bookings: Booking[] }) {
   const sortedMovies = useMemo(() => {
     const map: Record<string, number> = {};
     bookings.forEach((b) => {
