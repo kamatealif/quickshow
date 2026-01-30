@@ -9,7 +9,7 @@ export default async function AuthCallbackPage({
   const code = searchParams.code;
 
   if (!code) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   const supabase = await createSupabaseServerClient(); // ✅ THIS IS THE FIX
