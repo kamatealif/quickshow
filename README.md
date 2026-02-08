@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎬 Movie Ticket Booking Application
 
-## Getting Started
+A full-stack **Movie Ticket Booking Platform** built with **Next.js (App Router)** and **Supabase**, designed to handle real-world booking flows such as movie listings, showtimes, seat selection, bookings, and admin dashboards.
 
-First, run the development server:
+This project follows modern SaaS architecture patterns with server components, client components, authentication, and database-driven UI.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🚀 Features
+
+### User Side
+- Browse movies and showtimes
+- Select seats and book tickets
+- Secure authentication (login/signup)
+- View booking history
+- Real-time seat availability
+
+### Admin Side
+- Dashboard analytics (bookings, revenue, top movies)
+- Manage movies, theaters, and showtimes
+- Delete and update theaters/movies
+- Search and filter bookings
+- Role-based access (admin vs user)
+
+---
+
+## 🧠 Tech Stack
+
+| Layer        | Technology |
+|-------------|------------|
+| Frontend     | Next.js 14 (App Router) |
+| UI           | Tailwind CSS + Shadcn UI |
+| Backend      | Supabase (PostgreSQL + Auth) |
+| Auth         | Supabase Auth |
+| Database     | PostgreSQL |
+| Icons        | Lucide Icons |
+| Notifications| Sonner |
+| Deployment   | Vercel |
+
+---
+
+## 📁 Project Structure
+
+```txt
+app/
+├── admin/
+│   ├── bookings/
+│   ├── movies/
+│   ├── theaters/
+│   └── dashboard/
+├── auth/
+├── movies/
+├── bookings/
+├── layout.tsx
+├── page.tsx
+
+components/
+├── ui/
+├── admin/
+├── shared/
+
+lib/
+├── supabase/
+│   ├── client.ts
+│   ├── server.ts
+│   └── middleware.ts
+
+types/
+utils/
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
